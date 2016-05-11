@@ -5,6 +5,7 @@ from deepr.data_processing.batch_adapter import BatchAdapterLasagne
 from deepr.data_processing.simple_operations import OrdinalLabelVectorizer
 
 nr_classes=3
+labels_dict = {0:1, 1:2, 2:3} 
 
 def prepare_lasagne_patch(random_train_items, msk_src, network_parameters):
     print "getting all masks"
