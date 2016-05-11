@@ -25,12 +25,17 @@ def validation_filenames(shuffle=True):
          map(random.shuffle, [benign, dcis, idc])
     
     return benign, dcis, idc
+    
+def mask_folder():
+    path = os.path.join(DATA_FOLDER, 'AllMasksMerged')
+    return path
+    
 
 def per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, num_each_class, iteration):
     random_Samples = []
-    random_Samples = Benign_file_list[iteration*num_each_class[0]:(iteration+1)*num_each_class[0]] + 
+    random_Samples = (Benign_file_list[iteration*num_each_class[0]:(iteration+1)*num_each_class[0]] + 
         DCIS_file_list[iteration*num_each_class[1]:(iteration+1)*num_each_class[1]] + 
-        IDC_file_list[iteration*num_each_class[2]:(iteration+1)*num_each_class[2]] 
+        IDC_file_list[iteration*num_each_class[2]:(iteration+1)*num_each_class[2]] )
     #random.sample(Benign_file_list, num_each_class[0]) + random.sample(DCIS_file_list, num_each_class[1]) + random.sample(IDC_file_list, num_each_class[2])
    
     # get rid of \m at the end of the list elements

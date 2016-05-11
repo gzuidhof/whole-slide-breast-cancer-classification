@@ -34,12 +34,6 @@ sys.setrecursionlimit(1000000) #Set the maximum depth of the Python interpreter 
 
 np.random.seed(0)
 
-from deepr.data_processing.wsi_data_sources import WholeSlideImageDataSource, WholeSlideImageClassSampler, WholeSlideImageRandomPatchExtractor
-from deepr.data_processing.simple_operations import LambdaVoxelOperation
-from deepr.data_processing.batch_generator import RandomBatchGenerator
-from deepr.data_processing.batch_adapter import BatchAdapterLasagne
-from deepr.data_processing.simple_operations import OrdinalLabelVectorizer
-
 sys.path.append('../msc/')
 
 import ntpath
@@ -48,6 +42,7 @@ import util
 import dataset
 import babysitting
 import net
+import patch_sampling
     
   
 def train(num_batches_tra, batch_generator_lasagne, batch_size):
@@ -61,9 +56,9 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
         print inputs[0].values()[0].shape
         print inputs[1].values()[0].shape
         inputs[0].values()[0] = util.random_flips(inputs[0].values()[0])      
-        inputs[0].values()[0][:,0,:,:] = inputs[0].values()[0][:,0,:,:] - 0.79704494411170501
-        inputs[0].values()[0][:,1,:,:] = inputs[0].values()[0][:,1,:,:] - 0.61885510553571943
-        inputs[0].values()[0][:,2,:,:] = inputs[0].values()[0][:,2,:,:] - 0.71202771615037175
+        
+        util.zero_center(inputs[0].values()[0])
+        
         err_loss, l2_loss, predictions, acc = train_fn(inputs[0].values()[0].astype("float32"), inputs[1].values()[0].astype("float32"))      
         train_err += err_loss
         train_accu += acc
@@ -79,28 +74,6 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     train_loss = train_err / train_batches  
     train_accuracy = train_accu / train_batches
     return train_loss, train_accuracy
-    
-def prepareLasagnePatch(random_train_items, msk_src, network_parameters):
-    print "getting all masks"
-    tra_wsi = []
-    tra_msk = []
-    for tra_fl in random_train_items: # 20X
-        tra_wsi.append(WholeSlideImageDataSource(tra_fl, (network_parameters.image_size, network_parameters.image_size), network_parameters.data_level))
-        tra_msk.append(WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)) 
-    
-    patch_extractor = WholeSlideImageRandomPatchExtractor(tra_wsi, tra_msk)
-    train_data_source = LambdaVoxelOperation(patch_extractor, name = "image normalizer",
-                                 input_names = ["image"],
-                                 label_names = [],
-                                 function = util.normalize_image) 
-                                 
-    final_data_source = OrdinalLabelVectorizer(train_data_source, "label", "label", nr_classes)
-    batch_generator = RandomBatchGenerator([final_data_source])
-    batch_generator_lasagne = BatchAdapterLasagne(batch_generator)
-    batch_generator_lasagne.select_inputs(["image"])
-    batch_generator_lasagne.select_labels(["label"])
-    print "... is done"
-    return batch_generator_lasagne
         
 if __name__ == "__main__":
     from params import Params
@@ -171,7 +144,7 @@ if __name__ == "__main__":
     Benign_file_list, DCIS_file_list, IDC_file_list = dataset.train_filenames(shuffle=True)
     Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list = dataset.validation_filenames(shuffle=True)
 
-    msk_fls_All = os.path.join(dataset.DATA_FOLDER, 'AllMasksMerged')
+    msk_fls_All = dataset.mask_folder()
     
     labels_dict = {0:1, 1:2, 2:3} 
     train_loss_lst = []
@@ -197,14 +170,14 @@ if __name__ == "__main__":
     start_time = time.time()
     print "Getting all validation data"
     random_evaluation_items, msk_src = dataset.per_class_filelist(Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list, msk_fls_All, msk_src, network_parameters.num_val_samples, val_num)
-    batch_generator_lasagne_Val = prepareLasagnePatch(random_evaluation_items, msk_src, network_parameters)
+    batch_generator_lasagne_Val = patch_sampling.prepare_lasagne_patch(random_evaluation_items, msk_src, network_parameters)
     print "All validation data in memory"
     print("Getting validation images took {:.3f}s".format(time.time() - start_time)) 
     
     mini_epoch = 0
     start_time = time.time()
     random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, network_parameters.num_train_samples, mini_epoch)
-    batch_generator_lasagne_train = prepareLasagnePatch(random_train_items, msk_src, network_parameters)    
+    batch_generator_lasagne_train = patch_sampling.prepare_lasagne_patc(random_train_items, msk_src, network_parameters)    
     print("Getting training images took {:.3f}s".format(time.time() - start_time))    
     
     for epoch_num in range(network_parameters.n_epochs):
@@ -249,9 +222,9 @@ if __name__ == "__main__":
                 all_truth = []
                 for k in range(num_of_val_iterator):
                     inputs = batch_generator_lasagne_Val.get_batch(network_parameters.batch_size*3)
-                    inputs[0].values()[0][:,0,:,:] = inputs[0].values()[0][:,0,:,:] - 0.79704494411110501
-                    inputs[0].values()[0][:,1,:,:] = inputs[0].values()[0][:,1,:,:] - 0.61885510553571943
-                    inputs[0].values()[0][:,2,:,:] = inputs[0].values()[0][:,2,:,:] - 0.71202771615037175
+                    util.zero_center(inputs[0].values()[0])
+
+                    
                     err, test_prediction, t_acc = val_fn(inputs[0].values()[0].astype("float32"), inputs[1].values()[0].astype("float32"))
                     all_predictions.append(test_prediction)
                     all_truth.append(inputs[1].values()[0].astype("float32"))

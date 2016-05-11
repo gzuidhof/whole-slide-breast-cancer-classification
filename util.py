@@ -24,3 +24,9 @@ def random_flips(inputs):
     for indice in indices:
         inputs[indice,:,:,:] = inputs[indice,:,::RandomOnes1[indice],::RandomOnes2[indice]]
     return inputs
+
+def zero_center(images):
+    """ Subtract the mean R, G and B values from given images."""
+    images[:,0,:,:] -= 0.79704494411170501
+    images[:,1,:,:] -= 0.61885510553571943
+    images[:,2,:,:] -= 0.71202771615037175
