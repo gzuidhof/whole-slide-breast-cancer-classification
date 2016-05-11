@@ -193,8 +193,7 @@ if __name__ == "__main__":
     print("Getting training images took {:.3f}s".format(time.time() - start_time))
 
     for epoch_num in range(network_parameters.n_epochs):
-        print '------ Epoch '+str(epoch_num+1)+' ------'
-
+        print '\n------ Epoch '+str(epoch_num+1)+' ------'
 
         trainingFolds = 1
         if epoch_num==0:
