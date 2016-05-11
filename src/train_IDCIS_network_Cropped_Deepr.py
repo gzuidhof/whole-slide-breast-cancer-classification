@@ -54,11 +54,14 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     train_l2 = 0
     train_batches = 0
     start_time = time.time()
+    augmentation_time = 0
     for i in range(num_batches_tra):
+        s = time.time()
         inputs = batch_generator_lasagne.get_batch(batch_size)
         inputs[0].values()[0] = util.random_flips(inputs[0].values()[0])
 
         util.zero_center(inputs[0].values()[0])
+        augmentation_time+=time.time()-s
 
         err_loss, l2_loss, predictions, acc = train_fn(inputs[0].values()[0].astype("float32"), inputs[1].values()[0].astype("float32"))
         train_err += err_loss
@@ -68,8 +71,13 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
         percent = (i+1) / float(num_batches_tra)
         babysitting.progress_bar(percent, 50, err_loss, l2_loss, acc, 1)
 
+
+        #print "\n",x / (time.time()-s)
+
+
     # Then we print the results for this epoch:
     print("  Mini epoch took {:.3f}s".format(time.time() - start_time))
+    print("  Loading and augmentation took {:.3f}s".format(augmentation_time))
     print("  training accuracy: {:.6f} ---- training loss: {:.6f} ---- training L2 loss: {:.6f}".format(train_accu / train_batches, train_err / train_batches, train_l2 / train_batches))
     #print("  training L2 loss :\t\t{:.6f}".format(train_l2 / train_batches))
     train_loss = train_err / train_batches
@@ -102,7 +110,7 @@ if __name__ == "__main__":
     #lasagne.layers.set_all_param_values(network, stored_param_values['param values'])
 
     prediction = lasagne.layers.get_output(network)
-    e_x = np.exp(prediction - prediction.max(axis=1, keepdims=True))
+    e_x = T.exp(prediction - prediction.max(axis=1, keepdims=True))
     out = (e_x / e_x.sum(axis=1, keepdims=True)).flatten(2)
 
     # output is clipped to avoid ln of 0
@@ -123,7 +131,7 @@ if __name__ == "__main__":
    #         loss, params, learning_rate=0.005, momentum=0.9)
 
     test_prediction = lasagne.layers.get_output(network, deterministic=True)
-    test_e_x = np.exp(test_prediction - test_prediction.max(axis=1, keepdims=True))
+    test_e_x = T.exp(test_prediction - test_prediction.max(axis=1, keepdims=True))
     test_out = (test_e_x / test_e_x.sum(axis=1, keepdims=True)).flatten(2)
 
     # print test_out
