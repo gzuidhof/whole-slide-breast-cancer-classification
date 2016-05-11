@@ -56,8 +56,6 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     start_time = time.time()
     for i in range(num_batches_tra):
         inputs = batch_generator_lasagne.get_batch(batch_size)
-        print inputs[0].values()[0].shape
-        print inputs[1].values()[0].shape
         inputs[0].values()[0] = util.random_flips(inputs[0].values()[0])
 
         util.zero_center(inputs[0].values()[0])

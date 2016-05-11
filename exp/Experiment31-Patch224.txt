@@ -1,6 +1,6 @@
 image_size= 224
 batch_size= 10
-filter_size_all = 3, 3, 3, 3, 3, 3, 3, 3, 3, 2048, 1024, 2
+filter_size_all = 3, 3, 3, 3, 3, 3, 3, 3, 3, 2048, 1024, 3
 featuremap_size_all = 24, 24, 48, 48, 96, 96, 192, 192, 192
 dropout_ratio= 0.3
 n_epochs=100
@@ -15,7 +15,7 @@ beta2=0.999
 epsilon=1e-08
 l2_Lambda=0.0003
 data_level=0
-masks_level=2
+masks_level=3
 epoch_tolerance = 4
 accuracy_tolerance = 0.01
 lr_decay = 0.25
