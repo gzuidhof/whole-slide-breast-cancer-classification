@@ -4,46 +4,51 @@ Created on Tue Jul 07 16:02:52 2015
 
 @author: Babak & Guido
 """
-import joblib
-import theano
-import theano.tensor as T
-import lasagne
-from lasagne.nonlinearities import softmax #leaky_rectify,
-import numpy as np
-import os
-import time
-#import progressbar
-#from time import sleep
-import ntpath
-import random
-import sys
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_auc_score
 
-#from deeplearning.training_extensions.boosting import OnlineBooster
-#from PIL import Image
-if os.name == 'nt':
-    sys.path.append("C:\\Program Files\\ASAP 1.4.0\\bin")
-    sys.path.append("../..")
+if __name__ == "__main__":
+    import theano
+    import theano.tensor as T
+    import lasagne
+    from lasagne.layers import InputLayer, DenseLayer, batch_norm
+    from lasagne.nonlinearities import softmax #leaky_rectify,
 
-import multiresolutionimageinterface as mir
-from lasagne.layers import InputLayer, DenseLayer, batch_norm
-#import resource
-#resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
+    import joblib
 
-#sys.path.append(r"C:\Users\francesco\Data")
-sys.setrecursionlimit(1000000) #Set the maximum depth of the Python interpreter stack to limit. This limit prevents infinite recursion from causing an overflow of the C stack and crashing Python.
-np.random.seed(0)
+    import numpy as np
+    import os
+    import time
+    #import progressbar
+    #from time import sleep
+    import ntpath
+    import random
+    import sys
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from sklearn.metrics import roc_auc_score
 
-import ntpath
+    #from deeplearning.training_extensions.boosting import OnlineBooster
+    #from PIL import Image
+    if os.name == 'nt':
+        sys.path.append("C:\\Program Files\\ASAP 1.4.0\\bin")
+        sys.path.append("../..")
 
-import util
-import dataset
-import babysitting
-import net
-import patch_sampling
+    import multiresolutionimageinterface as mir
+
+    #import resource
+    #resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
+
+    #sys.path.append(r"C:\Users\francesco\Data")
+    sys.setrecursionlimit(1000000) #Set the maximum depth of the Python interpreter stack to limit. This limit prevents infinite recursion from causing an overflow of the C stack and crashing Python.
+    np.random.seed(0)
+
+    import ntpath
+
+    import util
+    import dataset
+    import babysitting
+    import net
+    import patch_sampling
 
 
 
@@ -83,6 +88,7 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     train_loss = train_err / train_batches
     train_accuracy = train_accu / train_batches
     return train_loss, train_accuracy
+
 
 if __name__ == "__main__":
     from params import Params
@@ -166,7 +172,6 @@ if __name__ == "__main__":
 
     msk_fls_All = dataset.mask_folder()
 
-    labels_dict = {0:1, 1:2, 2:3}
     train_loss_lst = []
     train_accuracy_lst = []
     val_loss_lst = []
@@ -179,7 +184,6 @@ if __name__ == "__main__":
     best_train_acc = 0
 
     sys.stdout.flush()
-    nr_classes=3
     best_epoch = 0
     milestone_epoch = 0
     #lr_decay = (network_parameters.learning_rate_schedule_adam[1]/network_parameters.learning_rate_schedule_adam[0])**(1./network_parameters.n_epochs)
