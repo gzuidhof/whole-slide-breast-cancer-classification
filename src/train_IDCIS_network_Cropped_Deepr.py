@@ -49,6 +49,7 @@ if __name__ == "__main__":
     import babysitting
     import net
     import patch_sampling
+    from parallel import ParallelBatchIterator
 
 
 
@@ -60,9 +61,12 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     train_batches = 0
     start_time = time.time()
     augmentation_time = 0
-    for i in range(num_batches_tra):
+    
+    batch_gen = ParallelBatchIterator(batch_generator_lasagne, X=[batch_size]*num_batches_tra)
+    for i, inputs in enumerate(batch_gen):
+    #for i in range(num_batches_tra):
         s = time.time()
-        inputs = batch_generator_lasagne.get_batch(batch_size)
+        #inputs = batch_generator_lasagne.get_batch(batch_size)
         inputs[0].values()[0] = util.random_flips(inputs[0].values()[0])
 
         util.zero_center(inputs[0].values()[0])

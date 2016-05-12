@@ -1,5 +1,6 @@
 from multiprocessing import Process, Queue, JoinableQueue, Value
 from threading import Thread
+import util
 
 class ParallelBatchIterator(object):
 	"""
@@ -8,17 +9,21 @@ class ParallelBatchIterator(object):
 	Constructor arguments:
 		batch_generator: function which can be called to yield a new batch.
 		ordered: boolean, whether the order of the batches matters
+		
+		batch_size: amount of points in one batch
 		multiprocess: multiprocess instead of multithread
 		n_producers: amount of producers (threads of processes)
 		max_queue_size: optional, default 2*n_producers
 
 	"""
 
-	def __init__(self, batch_generator, ordered=False, multiprocess=False, n_producers=2, max_queue_size=None):
+	def __init__(self, batch_generator, X, batch_size=1, ordered=False, multiprocess=False, n_producers=2, max_queue_size=None):
 		self.generator = batch_generator
 		self.ordered = ordered
 		self.multiprocess = multiprocess
 		self.n_producers = n_producers
+		self.X = X
+		self.batch_size = batch_size
 
 		if max_queue_size is None:
 			self.max_queue_size = n_producers*2
@@ -74,7 +79,7 @@ class ParallelBatchIterator(object):
 
 				if ordered:
 					while(True):
-					
+
 						# My turn to add job done?
 						if last_queued_job.value == job_index-1:
 
