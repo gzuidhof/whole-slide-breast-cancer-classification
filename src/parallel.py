@@ -1,6 +1,5 @@
-#from multiprocessing import Process, Queue, JoinableQueue, Value
+from multiprocessing import Process, Queue, JoinableQueue, Value
 #from multiprocess import Process, Queue, JoinableQueue, Value
-from pathos.multiprocessing import Process, Queue, JoinableQueue, Value
 from threading import Thread
 import util
 
@@ -21,7 +20,7 @@ class ParallelBatchIterator(object):
 
 	"""
 
-	def __init__(self, batch_generator, X, batch_size=1, ordered=False, multiprocess=True, n_producers=1, max_queue_size=None):
+	def __init__(self, batch_generator, X, batch_size=1, ordered=False, multiprocess=False, n_producers=1, max_queue_size=None):
 		self.generator = batch_generator
 		self.ordered = ordered
 		self.multiprocess = multiprocess

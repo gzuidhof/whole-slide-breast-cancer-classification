@@ -10,6 +10,7 @@ class Params:
     num_of_val_iterator = ""
     num_train_samples = ""
     num_val_samples = ""
+    n_classes = 3
 
     # parameters for Adam gradient update
     learning_rate_schedule_adam = ""

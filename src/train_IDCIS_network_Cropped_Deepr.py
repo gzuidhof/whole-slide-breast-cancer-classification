@@ -105,6 +105,7 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     train_accuracy = train_accu / train_batches
     return train_loss, train_accuracy
 
+import resnet
 
 if __name__ == "__main__":
     from params import Params
@@ -127,7 +128,8 @@ if __name__ == "__main__":
     input_var= T.ftensor4('inputs')
     target_var = T.fmatrix('targets')
     #stored_param_values = joblib.load(r"F:\Code\JournalDCIS_IDC\Results\ToyNetwork\Experiment5-Patch224_best_network_single_scale.pkl_01.npy.z")
-    network = net.define_network(network_parameters.featuremap_size_all, network_parameters.filter_size_all, dropout_ratio, network_parameters.image_size, input_var)
+    #network = net.define_network(network_parameters.featuremap_size_all, network_parameters.filter_size_all, dropout_ratio, network_parameters.image_size, input_var)
+    network = resnet.define_network(network_parameters, input_var)
 
     #lasagne.layers.set_all_param_values(network, stored_param_values['param values'])
 
