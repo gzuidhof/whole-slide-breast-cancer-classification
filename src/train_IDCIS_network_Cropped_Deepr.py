@@ -11,7 +11,7 @@ if __name__ == "__main__":
     import lasagne
     from lasagne.layers import InputLayer, DenseLayer, batch_norm
     from lasagne.nonlinearities import softmax #leaky_rectify,
-
+    #theano.config.mode = 'FAST_COMPILE'
     import joblib
 
     import numpy as np
@@ -51,7 +51,17 @@ if __name__ == "__main__":
     import patch_sampling
     from parallel import ParallelBatchIterator
 
+    from functools import partial
 
+
+def gen(batch_size, batch_generator_lasagne):
+    batch = batch_generator_lasagne.get_batch(batch_size)
+    batch[0].values()[0] = util.random_flips(batch[0].values()[0])
+    util.zero_center(batch[0].values()[0])
+
+    images = batch[0].values()[0].astype("float32")
+    labels = batch[1].values()[0].astype("float32")
+    return images, labels
 
 
 def train(num_batches_tra, batch_generator_lasagne, batch_size):
@@ -61,18 +71,20 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     train_batches = 0
     start_time = time.time()
     augmentation_time = 0
-    
-    batch_gen = ParallelBatchIterator(batch_generator_lasagne, X=[batch_size]*num_batches_tra)
-    for i, inputs in enumerate(batch_gen):
-    #for i in range(num_batches_tra):
-        s = time.time()
-        #inputs = batch_generator_lasagne.get_batch(batch_size)
-        inputs[0].values()[0] = util.random_flips(inputs[0].values()[0])
 
-        util.zero_center(inputs[0].values()[0])
+    generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne)
+    batch_gen = ParallelBatchIterator(generator, X=[batch_size]*num_batches_tra)
+    s = time.time()
+    for i, (images, labels) in enumerate(batch_gen):
+    #for i in range(num_batches_tra):
+
+        #inputs = batch_generator_lasagne.get_batch(batch_size)
+        #inputs[0].values()[0] = util.random_flips(inputs[0].values()[0])
+
+        #util.zero_center(inputs[0].values()[0])
         augmentation_time+=time.time()-s
 
-        err_loss, l2_loss, predictions, acc = train_fn(inputs[0].values()[0].astype("float32"), inputs[1].values()[0].astype("float32"))
+        err_loss, l2_loss, predictions, acc = train_fn(images, labels)
         train_err += err_loss
         train_accu += acc
         train_l2 += l2_loss
@@ -80,7 +92,7 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
         percent = (i+1) / float(num_batches_tra)
         babysitting.progress_bar(percent, 50, err_loss, l2_loss, acc, 1)
 
-
+        s = time.time()
         #print "\n",x / (time.time()-s)
 
 

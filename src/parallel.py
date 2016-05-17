@@ -1,6 +1,10 @@
-from multiprocessing import Process, Queue, JoinableQueue, Value
+#from multiprocessing import Process, Queue, JoinableQueue, Value
+#from multiprocess import Process, Queue, JoinableQueue, Value
+from pathos.multiprocessing import Process, Queue, JoinableQueue, Value
 from threading import Thread
 import util
+
+from functools import partial
 
 class ParallelBatchIterator(object):
 	"""
@@ -9,7 +13,7 @@ class ParallelBatchIterator(object):
 	Constructor arguments:
 		batch_generator: function which can be called to yield a new batch.
 		ordered: boolean, whether the order of the batches matters
-		
+
 		batch_size: amount of points in one batch
 		multiprocess: multiprocess instead of multithread
 		n_producers: amount of producers (threads of processes)
@@ -17,7 +21,7 @@ class ParallelBatchIterator(object):
 
 	"""
 
-	def __init__(self, batch_generator, X, batch_size=1, ordered=False, multiprocess=False, n_producers=2, max_queue_size=None):
+	def __init__(self, batch_generator, X, batch_size=1, ordered=False, multiprocess=True, n_producers=1, max_queue_size=None):
 		self.generator = batch_generator
 		self.ordered = ordered
 		self.multiprocess = multiprocess
@@ -32,9 +36,6 @@ class ParallelBatchIterator(object):
 
 	def __call__(self):
 		return self
-
-	def gen(self, *args):
-		return generator(*args)
 
 	def __iter__(self):
 		queue = JoinableQueue(maxsize=self.max_queue_size)
@@ -52,11 +53,9 @@ class ParallelBatchIterator(object):
 		queue.close()
 		job_queue.close()
 
-
-
 	def start_producers(self, result_queue):
 		jobs = Queue()
-		n_workers = self.N_PRODUCERS
+		n_workers = self.n_producers
 		batch_count = 0
 
 		#Flag used for keeping values in queue in order
@@ -67,34 +66,17 @@ class ParallelBatchIterator(object):
 			jobs.put( (job_index,batch) )
 
 		# Define producer (putting items into queue)
-		def produce(id):
-			while True:
-				job_index, task = jobs.get()
-
-				if task is None:
-					#print id, " fully done!"
-					break
-
-				result = self.gen(*task)
-
-				if ordered:
-					while(True):
-
-						# My turn to add job done?
-						if last_queued_job.value == job_index-1:
-
-							with last_queued_job.get_lock():
-								result_queue.put(result)
-								last_queued_job.value += 1
-								print id, " worker PUT", job_index
-								break
-				else:
-					result_queue.put(result)
+		produce = partial(produce_helper,
+			generator=self.generator,
+			jobs=jobs,
+			result_queue=result_queue,
+			last_queued_job=last_queued_job,
+			ordered=self.ordered)
 
 		# Start workers
 		for i in xrange(n_workers):
 
-			if params.MULTIPROCESS:
+			if self.multiprocess:
 				p = Process(target=produce, args=(i,))
 			else:
 				p = Thread(target=produce, args=(i,))
@@ -107,3 +89,23 @@ class ParallelBatchIterator(object):
 			jobs.put((-1,None))
 
 		return batch_count, jobs
+
+def produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered):
+	while True:
+		job_index, task = jobs.get()
+
+		if task is None:
+			#print id, " fully done!"
+			break
+
+		result = generator(*task)
+
+		while(True):
+			# My turn to add job result?
+			if last_queued_job.value == job_index-1 or not ordered:
+
+				with last_queued_job.get_lock():
+					result_queue.put(result)
+					last_queued_job.value += 1
+					#print id, " worker PUT", job_index
+					break
