@@ -52,6 +52,7 @@ if __name__ == "__main__":
     from parallel import ParallelBatchIterator
 
     from functools import partial
+    import resnet
 
 
 def gen(batch_size, batch_generator_lasagne):
@@ -105,12 +106,11 @@ def train(num_batches_tra, batch_generator_lasagne, batch_size):
     train_accuracy = train_accu / train_batches
     return train_loss, train_accuracy
 
-import resnet
-
 if __name__ == "__main__":
     from params import Params
     if os.name == 'posix':
-        path = r'/media/sf_Guido/exp/test.txt'
+        #path = r'/media/sf_Guido/exp/test.txt'
+        path = r'../exp/Experiment32-Patch224.txt'
     else:
         path = r'../exp/Experiment31-Patch224.txt'
     experiment = path.rsplit('/', 1)[1][:-4]
@@ -179,7 +179,8 @@ if __name__ == "__main__":
     from glob import glob
 
     if os.name == 'posix':
-        saving_DIR = r'/media/sf_Guido/exp/test.txt'
+        #saving_DIR = r'/media/sf_Guido/exp/test.txt'
+        saving_DIR = '../exp/results/'
     else:
         saving_DIR = '../exp/results/'
 

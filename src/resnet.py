@@ -51,11 +51,8 @@ def residual_block(l, increase_dim=False, projection=False):
     return block
 
 
-def define_network(params, input_var=None, n=1):
+def define_network(params, input_var=None, n=5):
     #input 224
-
-
-
 
     # Building the network
     l_in = InputLayer(shape=(None, 3, params.image_size, params.image_size), input_var=input_var)

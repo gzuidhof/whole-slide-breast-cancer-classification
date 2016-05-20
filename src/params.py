@@ -1,4 +1,7 @@
 class Params:
+
+    architecture = ""
+
     image_size = ""
     batch_size = ""
     featuremap_size_all = ""
@@ -29,6 +32,9 @@ class Params:
             self.load_parameters(path)
 
     def set(self, parameters_Dictionary):
+
+        self.architecture = parameters_Dictionary['architecture'][0]
+
         self.image_size = int(parameters_Dictionary['image_size'][0])
         self.batch_size = int(parameters_Dictionary['batch_size'][0])
         self.featuremap_size_all = map(int, parameters_Dictionary['featuremap_size_all'])
