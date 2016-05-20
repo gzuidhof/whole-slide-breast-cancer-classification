@@ -177,4 +177,4 @@ if __name__ == "__main__":
         
         logging.info("epoch time {}".format(time.time()-s))
         logging.info("train_loss {}, train_accuracy {}".format(train_loss, train_accuracy))
-        logging.info("val_loss {}, val_accuracy {}".format(train_loss, train_accuracy))
+        logging.info("val_loss {}, val_accuracy {}".format(val_loss, val_accuracy))
