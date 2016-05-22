@@ -71,7 +71,8 @@ def prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multi
                                  function = util.normalize_image)
 
     final_data_source = OrdinalLabelVectorizer(train_data_source, "label", "label", nr_classes)
-    batch_generator = RandomBatchGenerator([final_data_source])
+    batch_generator = RandomBatchGenerator([final_data_source]) 
+     
     batch_generator_lasagne = BatchAdapterLasagne(batch_generator)
     batch_generator_lasagne.select_inputs(["image"])
     batch_generator_lasagne.select_labels(["label"])
@@ -112,13 +113,13 @@ def prepare_sampler(network_parameters):
     #Skip loading evaluation
     print "Loading validation masks"
     random_evaluation_items, msk_src = dataset.per_class_filelist(Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list, msk_fls_All, msk_src, n_val_samples, val_num)
-    batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, network_parameters, multiprocess=True, processes=6)
+    batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, network_parameters, multiprocess=True, processes=4)
 
     validation_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_validation)
 
     print "Loading train masks"
     random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, n_train_samples, mini_epoch)
-    batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multiprocess=True, processes=6)
+    batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multiprocess=True, processes=4)
 
     train_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_train)
 

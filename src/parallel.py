@@ -107,7 +107,7 @@ def _produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered)
 		if job_index == -1 and task is None:
 			break
 
-		result = generator(*task)
+		result = generator(task)
 
 		# Put result onto the 'done'-queue
 		while(True):
