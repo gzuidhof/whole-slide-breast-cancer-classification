@@ -102,7 +102,7 @@ def run_epoch(fn, n_batches, batch_generator, batch_size, multiprocess=True):
     else:
         print 'WITHOUT PARALLEL'
         s = time.time()
-        for i in tqdm(range(batch_size)):
+        for i in tqdm(range(n_batches)):
             (images, labels) = batch_generator(batch_size)
             augmentation_time+=time.time()-s
             err_loss, l2_loss, predictions, acc = fn(images, labels)
@@ -164,8 +164,8 @@ if __name__ == "__main__":
         logging.info("epoch {}".format(epoch_num))
         print '\n------ Epoch '+str(epoch_num+1)+' ------'
 
-        num_of_train_iterator = network_parameters.num_of_train_iterator[int(epoch_num<1)]
-        num_of_val_iterator = network_parameters.num_of_val_iterator[int(epoch_num<1)]
+        num_of_train_iterator = network_parameters.num_of_train_iterator[int(epoch_num>0)]
+        num_of_val_iterator = network_parameters.num_of_val_iterator[int(epoch_num>0)]
 
         print '------ Training on Epoch {:d} ------'.format(epoch_num+1)
         
