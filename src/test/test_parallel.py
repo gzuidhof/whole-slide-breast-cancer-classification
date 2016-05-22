@@ -13,7 +13,7 @@ def test_in_order():
         time.sleep((10-job)*0.001)
         return job
         
-    pbg = ParallelBatchIterator(gen, X=range(10), ordered=False, batch_size=1)
+    pbg = ParallelBatchIterator(gen, X=range(10), ordered=False, batch_size=1, multiprocess=False)
     
     batches = []
     for batch in pbg:
