@@ -6,38 +6,56 @@ from lasagne.layers import NonlinearityLayer
 from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
 from lasagne.layers import MaxPool2DLayer as PoolLayer
 from lasagne.nonlinearities import softmax
+import lasagne.layers
+
+from mirror_padding import MirrorPadLayer
 
 
-def define_network(input_var):
+def define_network(network_parameters, input_var):
     net = {}
 
-    net['input'] = InputLayer((None, 3, 224, 224), input_var=input_var)
-    net['conv1'] = ConvLayer(net['input'],
+    net = InputLayer((None, 3, network_parameters.image_size, network_parameters.image_size), input_var=input_var)
+    
+    net = MirrorPadLayer(net, width=(4,4))
+    
+    net = ConvLayer(net,
                              num_filters=64,
                              filter_size=5,
                              stride=2,
                              flip_filters=False)
-    net['pool1'] = PoolLayer(net['conv1'],
+    #net = PoolLayer(net,
+    #                         pool_size=2,
+    #                         stride=2,
+    #                         ignore_border=False)
+    
+    net = MirrorPadLayer(net, width=(2,2))
+    net = ConvLayer(net,
+                             num_filters=128,
+                             filter_size=3,
+                             pad=0,
+                             flip_filters=False)
+                             
+    net = MirrorPadLayer(net, width=(2,2))
+    net = ConvLayer(net,
+                             num_filters=256,
+                             filter_size=3,
+                             pad=0,
+                             flip_filters=False)
+    
+    net = MirrorPadLayer(net, 
+                             width=(8,8))
+                             
+                             
+    net= PoolLayer(net,
                              pool_size=2,
                              stride=2,
                              ignore_border=False)
-    net['conv3'] = ConvLayer(net['pool1'],
-                             num_filters=128,
-                             filter_size=3,
-                             pad=1,
-                             flip_filters=False)
-    net['conv5'] = ConvLayer(net['conv3'],
-                             num_filters=256,
-                             filter_size=3,
-                             pad=1,
-                             flip_filters=False)
-    net['pool5'] = PoolLayer(net['conv5'],
-                             pool_size=3,
-                             stride=3,
-                             ignore_border=False)
-    net['fc7'] = DenseLayer(net['pool5'], num_units=1024)
-    net['drop7'] = DropoutLayer(net['fc7'], p=0.5)
-    net['fc8'] = DenseLayer(net['drop7'], num_units=3, nonlinearity=None)
+                             
+    print lasagne.layers.get_output_shape(net)
+                             
+    net = DenseLayer(net, num_units=512)
+    net = DropoutLayer(net, p=0.5)
+    net = DenseLayer(net, num_units=3, nonlinearity=None)
     #net['prob'] = NonlinearityLayer(net['fc8'], softmax)
 
     return net
