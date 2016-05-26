@@ -1,6 +1,7 @@
+from __future__ import division
+import math
 from multiprocessing import Process, Queue, JoinableQueue, Value
 from threading import Thread
-import util
 
 from functools import partial
 
@@ -15,8 +16,7 @@ class ParallelBatchIterator(object):
 		ordered: boolean (default=False), whether the order of the batches matters
 		batch_size: integer (default=1), amount of points in one batch
 		
-		multiprocess: boolean (default=True), multiprocess instead of multithread
-		
+		multiprocess: boolean (default=True), multiprocess instead of multithrea
 		n_producers: integer (default=4), amount of producers (threads or processes)
 		max_queue_size: integer (default=4*n_producers)
 	"""
@@ -53,7 +53,7 @@ class ParallelBatchIterator(object):
 		job_queue.close()
 		
 	def __len__(self):
-		return len(self.X)
+		return math.ceil(len(self.X)/self.batch_size)
 
 	def _start_producers(self, result_queue):
 		jobs = Queue()
@@ -63,7 +63,7 @@ class ParallelBatchIterator(object):
 		# Flag used for keeping values in queue in order
 		last_queued_job = Value('i', -1)
 		
-		chunks = util.chunks(self.X,self.batch_size) if self.batch_size > 1 else self.X
+		chunks = _chunks(self.X,self.batch_size) if self.batch_size > 1 else self.X
 		
 
 		# Add jobs to queue
@@ -122,3 +122,10 @@ def _produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered)
 					last_queued_job.value += 1
 					#print id, " worker PUT", job_index
 					break
+
+def _chunks(l, n):
+    """ Yield successive n-sized chunks from l.
+        from http://goo.gl/DZNhk
+    """
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
