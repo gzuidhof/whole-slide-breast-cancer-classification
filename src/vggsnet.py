@@ -16,45 +16,46 @@ def define_network(network_parameters, input_var):
 
     net = InputLayer((None, 3, network_parameters.image_size, network_parameters.image_size), input_var=input_var)
     
-    net = MirrorPadLayer(net, width=(4,4))
+    #net = MirrorPadLayer(net, width=(4,4))
     
     net = ConvLayer(net,
-                             num_filters=64,
+                             num_filters=32,
                              filter_size=5,
-                             stride=2,
+                             stride=1,
+                             pad=0,
                              flip_filters=False)
     #net = PoolLayer(net,
     #                         pool_size=2,
     #                         stride=2,
     #                         ignore_border=False)
     
+    #net = MirrorPadLayer(net, width=(2,2))
+    net = ConvLayer(net,
+                             num_filters=64,
+                             filter_size=3,
+                             pad=0,
+                             flip_filters=False)
+                 
+    net= PoolLayer(net,
+                             pool_size=2,
+                             stride=2,
+                             ignore_border=False)
+                 
     net = MirrorPadLayer(net, width=(2,2))
     net = ConvLayer(net,
                              num_filters=128,
                              filter_size=3,
                              pad=0,
                              flip_filters=False)
-                             
-    net = MirrorPadLayer(net, width=(2,2))
-    net = ConvLayer(net,
-                             num_filters=256,
-                             filter_size=3,
-                             pad=0,
-                             flip_filters=False)
     
-    net = MirrorPadLayer(net, 
-                             width=(8,8))
                              
                              
-    net= PoolLayer(net,
-                             pool_size=2,
-                             stride=2,
-                             ignore_border=False)
+
                              
     print lasagne.layers.get_output_shape(net)
                              
     net = DenseLayer(net, num_units=512)
-    net = DropoutLayer(net, p=0.5)
+    #net = DropoutLayer(net, p=0.5)
     net = DenseLayer(net, num_units=3, nonlinearity=None)
     #net['prob'] = NonlinearityLayer(net['fc8'], softmax)
 
