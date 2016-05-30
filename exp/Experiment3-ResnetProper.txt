@@ -1,6 +1,6 @@
 architecture=resnet
 image_size= 224
-batch_size= 3
+batch_size= 33
 filter_size_all = 3, 3, 3, 3, 3, 3, 3, 3, 3, 2048, 1024, 3
 featuremap_size_all = 24, 24, 48, 48, 96, 96, 192, 192, 192
 dropout_ratio= 0.3
