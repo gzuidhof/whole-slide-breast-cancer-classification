@@ -10,10 +10,13 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
-def normalize_image(namedNdArray):
+def normalize_named_image(namedNdArray):
     """ Normalization function to map RGB range to 0 - 1. """
     namedNdArray.data = (namedNdArray.data / 255.)
     return namedNdArray    
+    
+def normalize_image(image):
+    return image/255.
     
 def random_flips(inputs):
     bs = inputs.shape[0]
@@ -30,3 +33,5 @@ def zero_center(images):
     images[:,0,:,:] -= 0.79704494411170501
     images[:,1,:,:] -= 0.61885510553571943
     images[:,2,:,:] -= 0.71202771615037175
+    
+    return images
