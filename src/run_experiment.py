@@ -23,7 +23,7 @@ def load_network(network_parameters, input_var):
         network = alexnet.define_network()
     elif network_parameters.architecture == "vggsnet":
         import vggsnet
-        network = vggsnet.define_network(input_var)['fc8']
+        network = vggsnet.define_network(network_parameters, input_var)
     elif network_parameters.architecture == "resnet":
         import resnet
         network = resnet.define_network(network_parameters, input_var)
@@ -88,7 +88,7 @@ def run_epoch(fn, n_batches, batch_generator, batch_size, multiprocess=True):
     
     
     if multiprocess:
-        print 'WITH PARALLEL'
+        #print 'WITH PARALLEL'
         s = time.time()
         for i, (images, labels) in enumerate(tqdm(batch_gen)):
         #for i in tqdm(range(batch_size)):
@@ -100,7 +100,7 @@ def run_epoch(fn, n_batches, batch_generator, batch_size, multiprocess=True):
             l2 += l2_loss
             s = time.time()
     else:
-        print 'WITHOUT PARALLEL'
+        #print 'WITHOUT PARALLEL'
         s = time.time()
         for i in tqdm(range(n_batches)):
             (images, labels) = batch_generator(batch_size)
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     logging.info("starting training")
     for epoch_num in range(network_parameters.n_epochs):
         s = time.time()
-        do_parallel = epoch_num % 2 == 0
+        do_parallel = True#epoch_num % 2 == 0
         
         
         logging.info("epoch {}".format(epoch_num))
