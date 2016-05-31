@@ -18,16 +18,19 @@ def output_size_for_input(in_size, depth):
     return in_size
 
 NET_DEPTH = 5
-INPUT_SIZE = 512
+INPUT_SIZE = 572
+#INPUT_SIZE = 572
 OUTPUT_SIZE = output_size_for_input(INPUT_SIZE, NET_DEPTH)
 
 def filter_for_depth(depth):
     return 2**(5+depth)
 
 def define_network(input_var):
+    num_classes = 3
+
     batch_size = None
     net = {}
-    net['input'] = InputLayer(shape=(batch_size,1,INPUT_SIZE,INPUT_SIZE), input_var=input_var)
+    net['input'] = InputLayer(shape=(batch_size,num_classes,INPUT_SIZE,INPUT_SIZE), input_var=input_var)
 
     nonlinearity = nonlinearities.rectify
 
@@ -82,7 +85,7 @@ def define_network(input_var):
         expansion(d, deepest)
 
     # Output layer
-    net['out'] = Conv2DLayer(net['_conv0_2'], num_filters=2, filter_size=(1,1), pad='valid',
+    net['out'] = Conv2DLayer(net['_conv0_2'], num_filters=num_classes, filter_size=(1,1), pad='valid',
                                     nonlinearity=None)
 
     #import network_repr
@@ -115,9 +118,9 @@ def score_metrics(out, target_var, weight_map, l2_loss=0):
 
 
 def define_updates(network, input_var, target_var, weight_var):
-    l2_lambda = 5e-5 #Weight decay
-    learning_rate = learning_rate=0.0002
-    momentum = 0.96
+    l2_lambda = 2e-5 #Weight decay
+    learning_rate = learning_rate=0.00002
+    momentum = 0.99
 
     params = lasagne.layers.get_all_params(network, trainable=True)
 

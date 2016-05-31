@@ -88,12 +88,9 @@ def unet_generator(wsi_filenames, msk_src, patch_size, crop=None):
     
     filenames = [(im,msk_src[im]) for im in wsi_filenames]
     
-    def genny(batch_size):
-        f = list(filenames)
-        np.random.shuffle(f)
-        batch_files = f[:batch_size]
+    def genny(filenames):
         
-        return extract_random_patches(batch_files, patch_size, crop)
+        return extract_random_patches(filenames, patch_size, crop)
     
     return genny
 
@@ -104,66 +101,85 @@ def extract_random_patch(filename_tuple, patch_size, crop_size=None):
     level=0
     img = r.open(image_filename)
     dims = img.getLevelDimensions(level)
-    image = img.getUCharPatch(0, 0, patch_size, patch_size, level)
+    
+    max_x = np.max((patch_size,dims[0]-patch_size))
+    place = np.random.randint(0,max_x)
+
+    image = img.getUCharPatch(place, place, patch_size, patch_size, level)
     image = image.transpose(2,0,1) #From 0,1,c to c,0,1
     img.close()
     
     r = mir.MultiResolutionImageReader()
     level=0
     img = r.open(mask_filename)
-    dims = img.getLevelDimensions(level)
-    mask = img.getUCharPatch(0, 0, patch_size, patch_size, level)
+    #dims = img.getLevelDimensions(level)
+    mask = img.getUCharPatch(place, place, patch_size, patch_size, level)
+    #print dims
     mask = mask.transpose(2,0,1)
     img.close()
     
     if crop_size is not None:
-        offset = (mask.shape[0]-crop_size)//2
-        mask = mask[offset:offset+crop_size,offset:offset+crop_size]
+        offset = (mask.shape[1]-crop_size)//2
+        mask = mask[:,offset:offset+crop_size,offset:offset+crop_size]
     image = np.expand_dims(image, axis=0)
     image = np.array(image, dtype=np.float32)
     image = util.normalize_image(image)
     image = util.zero_center(image)
     image = util.random_flips(image)
     
-    image = np.expand_dims(image, axis=0)
-    mask = np.array(np.expand_dims(np.expand_dims(mask, axis=0),axis=0),dtype=np.int64)
-    weights = np.ones_like(mask, dtype=np.float32)
+    background_mask = np.where(mask==-1,0,1)
+    mask = np.clip(np.array(np.expand_dims(mask, axis=0), dtype=np.int64)-1,0,100)
     
+    
+    weights = np.ones_like(mask, dtype=np.float32)
+    weights = np.array(weights*background_mask,dtype=np.float32)
     return image, mask, weights
     
     
 def extract_random_patches(filenames, patch_size, crop_size=None):
     data_points = [extract_random_patch(f, patch_size, crop_size) for f in filenames]
     images, masks, weights = zip(*data_points)
-    
+  
     return np.concatenate(images,axis=0), np.concatenate(masks,axis=0), np.concatenate(weights,axis=0)
 
-def prepare_sampler(network_parameters, unet=False):
+def get_filenames(network_parameters):
     Benign_file_list, DCIS_file_list, IDC_file_list = dataset.train_filenames(shuffle=True)
     Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list = dataset.validation_filenames(shuffle=True)
-
+    
     msk_fls_All = dataset.mask_folder()
-
-    val_num = 0
-    mini_epoch = 0
     msk_src = {}
 
     n_val_samples = network_parameters.num_val_samples
     n_train_samples = network_parameters.num_train_samples
-   
+
     random_evaluation_items, msk_src = dataset.per_class_filelist(Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list, msk_fls_All, msk_src, n_val_samples)
     random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, n_train_samples)
     
-    if unet:
-        validation_generator = unet_generator(random_evaluation_items, msk_src, 512)
-        train_generator = unet_generator(random_train_items, msk_src, 512)
-    else:
-        print "Loading validation masks"
-        batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, network_parameters, multiprocess=True, processes=4)
-        validation_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_validation)
-        
-        print "Loading train masks"
-        batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multiprocess=True, processes=4)
-        train_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_train)
+    filenames_val = [(im,msk_src[im]) for im in random_evaluation_items]
+    filenames_train = [(im,msk_src[im]) for im in random_train_items]
+    
+    return filenames_train, filenames_val
+
+
+def prepare_sampler(network_parameters):
+    Benign_file_list, DCIS_file_list, IDC_file_list = dataset.train_filenames(shuffle=True)
+    Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list = dataset.validation_filenames(shuffle=True)
+
+    msk_fls_All = dataset.mask_folder()
+    msk_src = {}
+
+    n_val_samples = network_parameters.num_val_samples
+    n_train_samples = network_parameters.num_train_samples
+    
+    random_evaluation_items, msk_src = dataset.per_class_filelist(Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list, msk_fls_All, msk_src, n_val_samples)
+    random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, n_train_samples)
+    
+    print "Loading validation masks"
+    batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, network_parameters, multiprocess=True, processes=4)
+    validation_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_validation)
+    
+    print "Loading train masks"
+    batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multiprocess=True, processes=4)
+    train_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_train)
         
     return train_generator, validation_generator

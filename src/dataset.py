@@ -40,7 +40,7 @@ def mask_folder():
 
 def per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, num_each_class):
 	random_Samples = []
-	random_Samples = (Benign_file_list[:*num_each_class[0]] +
+	random_Samples = (Benign_file_list[:num_each_class[0]] +
 		DCIS_file_list[:num_each_class[1]] +
 		IDC_file_list[:num_each_class[2]] )
 

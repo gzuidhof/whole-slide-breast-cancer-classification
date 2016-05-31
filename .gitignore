@@ -63,3 +63,6 @@ target/
 
 output/
 exp/results/*
+data/
+images/
+src/.vscode/launch.json
