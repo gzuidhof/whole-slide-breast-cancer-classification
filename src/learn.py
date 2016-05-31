@@ -89,10 +89,15 @@ if __name__ == "__main__":
             train_metrics.append([err, l2_loss, acc, dice, tp, tn, fp, fn])
             train_batches += 1
 
-            if np.ceil(i/train_batch_size) % 10 == 0:
-                im = np.hstack((
+            if i % 2 == 0:
+                im = np.vstack(np.hstack((
                     true[:OUTPUT_SIZE**2].reshape(OUTPUT_SIZE,OUTPUT_SIZE),
-                    prob[:OUTPUT_SIZE**2][:,1].reshape(OUTPUT_SIZE,OUTPUT_SIZE)))
+                    prob[:OUTPUT_SIZE**2][:,1].reshape(OUTPUT_SIZE,OUTPUT_SIZE))),
+                    
+                    np.hstack((
+                    inputs[:OUTPUT_SIZE**2].reshape(OUTPUT_SIZE,OUTPUT_SIZE),
+                    prob[:OUTPUT_SIZE**2][:,2].reshape(OUTPUT_SIZE,OUTPUT_SIZE))))
+                    
 
                 plt.imsave(os.path.join(plot_folder,'train_{}_epoch{}.png'.format(model_name, epoch)),im)
 
@@ -111,7 +116,7 @@ if __name__ == "__main__":
             val_metrics.append([err, l2_loss, acc, dice, tp, tn, fp, fn])
             val_batches += 1
             
-            if np.ceil(i/val_batch_size) % 10 == 0: #Create image every 10th image
+            if i % 2 == 0:
                 im = np.hstack((
                     true[:OUTPUT_SIZE**2].reshape(OUTPUT_SIZE,OUTPUT_SIZE),
                     prob[:OUTPUT_SIZE**2][:,1].reshape(OUTPUT_SIZE,OUTPUT_SIZE)))

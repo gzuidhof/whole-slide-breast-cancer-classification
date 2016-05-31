@@ -15,6 +15,7 @@ from deepr.data_processing.simple_operations import OrdinalLabelVectorizer
 
 import util
 import dataset
+import loss_weighting
 
 nr_classes=3
 labels_dict = {q:q+1 for q in range(nr_classes)}
@@ -127,20 +128,22 @@ def extract_random_patch(filename_tuple, patch_size, crop_size=None):
     image = util.zero_center(image)
     image = util.random_flips(image)
     
-    background_mask = np.where(mask==-1,0,1)
-    mask = np.clip(np.array(np.expand_dims(mask, axis=0), dtype=np.int64)-1,0,100)
+    mask = np.array(np.expand_dims(mask, axis=0), dtype=np.int64)-1
     
-    
-    weights = np.ones_like(mask, dtype=np.float32)
-    weights = np.array(weights*background_mask,dtype=np.float32)
-    return image, mask, weights
+    return image, mask
     
     
 def extract_random_patches(filenames, patch_size, crop_size=None):
     data_points = [extract_random_patch(f, patch_size, crop_size) for f in filenames]
-    images, masks, weights = zip(*data_points)
+    images, masks = zip(*data_points)
+    
+    ims = np.concatenate(images,axis=0)
+    msks = np.concatenate(masks,axis=0)
+    
+    weights = np.array(loss_weighting.weight_by_class_balance(msks, classes=[0,1,2]),dtype=np.float32)
+    msks = np.clip(msks,0,100)
   
-    return np.concatenate(images,axis=0), np.concatenate(masks,axis=0), np.concatenate(weights,axis=0)
+    return ims, msks, weights
 
 def get_filenames(network_parameters):
     Benign_file_list, DCIS_file_list, IDC_file_list = dataset.train_filenames(shuffle=True)
