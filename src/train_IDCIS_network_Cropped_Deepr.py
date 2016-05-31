@@ -35,10 +35,6 @@ if __name__ == "__main__":
 
     import multiresolutionimageinterface as mir
 
-    #import resource
-    #resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
-
-    #sys.path.append(r"C:\Users\francesco\Data")
     sys.setrecursionlimit(1000000) #Set the maximum depth of the Python interpreter stack to limit. This limit prevents infinite recursion from causing an overflow of the C stack and crashing Python.
     np.random.seed(0)
 
