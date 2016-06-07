@@ -1,4 +1,6 @@
+from params import params as P
 import numpy as np
+import os
 
 def float32(k):
     return np.cast['float32'](k)
@@ -30,8 +32,15 @@ def random_flips(inputs):
 
 def zero_center(images):
     """ Subtract the mean R, G and B values from given images."""
-    images[:,0,:,:] -= 0.79704494411170501
-    images[:,1,:,:] -= 0.61885510553571943
-    images[:,2,:,:] -= 0.71202771615037175
+    #images[:,0,:,:] -= 0.79704494411170501
+    #images[:,1,:,:] -= 0.61885510553571943
+    #images[:,2,:,:] -= 0.71202771615037175
+    images[:,0,:,:] -= P.MEAN_PIXEL[0]
+    images[:,1,:,:] -= P.MEAN_PIXEL[1]
+    images[:,2,:,:] -= P.MEAN_PIXEL[2]
     
     return images
+    
+def make_dir_if_not_present(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
