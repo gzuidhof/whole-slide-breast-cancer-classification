@@ -70,6 +70,7 @@ class Params():
 
         # Misc
         self.MULTIPROCESS_LOAD_AUGMENTATION = cf.getboolean('misc', 'multiprocess_load_augmentation')
+        self.N_WORKERS_LOAD_AUGMENTATION = cf.getint('misc', 'n_workers_load_augmentation')
         self.SAVE_EVERY_N_EPOCH = cf.getint('misc', 'save_every_n_epoch')
 
     def to_string(self):

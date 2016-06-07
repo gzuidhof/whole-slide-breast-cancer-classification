@@ -76,7 +76,8 @@ if __name__ == "__main__":
         np.random.shuffle(filenames_train)
         train_gen = ParallelBatchIterator(generator, filenames_train, ordered=False,
                                             batch_size=P.BATCH_SIZE_TRAIN,
-                                            multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION)
+                                            multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
+                                            n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
 
         train_metrics = []
         val_metrics = []
@@ -103,7 +104,8 @@ if __name__ == "__main__":
         np.random.shuffle(filenames_val)
         val_gen = ParallelBatchIterator(generator, filenames_val, ordered=False,
                                             batch_size=P.BATCH_SIZE_VALIDATION,
-                                            multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION)
+                                            multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
+                                            n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
 
         for i, batch in enumerate(tqdm(val_gen)):
             inputs, targets, weights, _ = batch
