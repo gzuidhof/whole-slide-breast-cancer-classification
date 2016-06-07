@@ -2,31 +2,23 @@ from glob import glob
 import os
 import random
 import ntpath
-
-if os.name == 'posix':
-	#DATA_FOLDER = '/media/sf_BreastDataset/'
-	DATA_FOLDER = '/mnt/rdstorage1/Userdata/Guido/BreastDataset'
-else:
-	DATA_FOLDER = 'D:/BreastDataset/'
-#DATA_FOLDER = '/media/sf_BreastDataset/'
+from params import params as P
 
 
 def train_filenames(shuffle=True):
-	benign = sorted(glob(os.path.join(DATA_FOLDER, 'Benign_Train','*.tif')))
-	dcis = sorted(glob(os.path.join(DATA_FOLDER, 'DCIS_Train','*.tif')))
-	idc = sorted(glob(os.path.join(DATA_FOLDER, 'IDC_train','*.tif')))
+	benign = sorted(glob(os.path.join(P.DATA_FOLDER, 'Benign_Train','*.tif')))
+	dcis = sorted(glob(os.path.join(P.DATA_FOLDER, 'DCIS_Train','*.tif')))
+	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'IDC_train','*.tif')))
 
 	if shuffle:
 		 map(random.shuffle, [benign, dcis, idc])
 
-	#print benign, dcis, idc
-
 	return benign, dcis, idc
 
 def validation_filenames(shuffle=True):
-	benign = sorted(glob(os.path.join(DATA_FOLDER, 'Benign_Validation','*.tif')))
-	dcis = sorted(glob(os.path.join(DATA_FOLDER, 'DCIS_Validation','*.tif')))
-	idc = sorted(glob(os.path.join(DATA_FOLDER, 'IDC_validation','*.tif')))
+	benign = sorted(glob(os.path.join(P.DATA_FOLDER, 'Benign_Validation','*.tif')))
+	dcis = sorted(glob(os.path.join(P.DATA_FOLDER, 'DCIS_Validation','*.tif')))
+	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'IDC_validation','*.tif')))
 
 	if shuffle:
 		 map(random.shuffle, [benign, dcis, idc])
@@ -34,7 +26,7 @@ def validation_filenames(shuffle=True):
 	return benign, dcis, idc
 
 def mask_folder():
-	path = os.path.join(DATA_FOLDER, 'AllMasksMerged')
+	path = os.path.join(P.DATA_FOLDER, 'AllMasksMerged')
 	return path
 
 

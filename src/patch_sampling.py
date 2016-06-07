@@ -17,6 +17,8 @@ import util
 import dataset
 import loss_weighting
 
+from params import params as P
+
 nr_classes=3
 labels_dict = {q:q+1 for q in range(nr_classes)}
 
@@ -143,17 +145,17 @@ def extract_random_patches(filenames, patch_size, crop_size=None):
     weights = np.array(loss_weighting.weight_by_class_balance(msks, classes=[0,1,2]),dtype=np.float32)
     msks = np.clip(msks,0,100)
   
-    return ims, msks, weights
+    return ims, msks, weights, filenames
 
-def get_filenames(network_parameters):
+def get_filenames():
     Benign_file_list, DCIS_file_list, IDC_file_list = dataset.train_filenames(shuffle=True)
     Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list = dataset.validation_filenames(shuffle=True)
     
     msk_fls_All = dataset.mask_folder()
     msk_src = {}
 
-    n_val_samples = network_parameters.num_val_samples
-    n_train_samples = network_parameters.num_train_samples
+    n_val_samples = [P.SUBSET]*3
+    n_train_samples = [P.SUBSET]*3
 
     random_evaluation_items, msk_src = dataset.per_class_filelist(Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list, msk_fls_All, msk_src, n_val_samples)
     random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, n_train_samples)
