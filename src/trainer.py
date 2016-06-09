@@ -61,7 +61,7 @@ class Trainer(object):
 
     def post_epoch(self):
         logging.info("Epoch {} of {} took {:.3f}s".format(
-            epoch, P.N_EPOCHS, time.time() - self.start_time))
+            self.epoch, P.N_EPOCHS, time.time() - self.start_time))
 
         labels, train_values = self.train_metrics.batch_done()
         labels, val_values = self.val_metrics.batch_done()

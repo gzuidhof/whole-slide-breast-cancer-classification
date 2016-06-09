@@ -39,7 +39,7 @@ class UNetTrainer(trainer.Trainer):
         self.train_fn = train_fn
         self.val_fn = val_fn
 
-    def do_epoch_batches(self, fn, batch_generator, metrics):
+    def do_batches(self, fn, batch_generator, metrics):
         for i, batch in enumerate(tqdm(batch_generator)):
             inputs, targets, weights, _ = batch
 
@@ -71,7 +71,7 @@ class UNetTrainer(trainer.Trainer):
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
 
-            self.do_epoch_batches(self.train_fn, train_gen, self.train_metrics)
+            self.do_batches(self.train_fn, train_gen, self.train_metrics)
 
             # And a full pass over the validation data:
             val_gen = ParallelBatchIterator(generator, filenames_val, ordered=False,
@@ -79,7 +79,7 @@ class UNetTrainer(trainer.Trainer):
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
 
-            self.do_epoch_batches(self.val_fn, val_gen, self.val_metrics)
+            self.do_batches(self.val_fn, val_gen, self.val_metrics)
 
             self.post_epoch()
 

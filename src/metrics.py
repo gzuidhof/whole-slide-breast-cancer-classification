@@ -56,8 +56,10 @@ class Metrics(object):
 
                 values += [specificity, precision, recall]
                 new_labels = ["Specificity", "Precision", "Recall"]
+
                 if len(classes) > 0:
                     new_labels = [l+"_class"+str(c) for l in new_labels]
+                    
                 labels += new_labels
 
         self.values.append(values)
