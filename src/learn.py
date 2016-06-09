@@ -12,7 +12,6 @@ import patch_sampling
 import logging
 from logger import initialize_logger
 from params import params as P
-from functools import partial
 
 if __name__ == "__main__":
     import theano
@@ -42,7 +41,6 @@ if __name__ == "__main__":
 
     P.write_to_file(os.path.join(model_folder, 'config.ini'))
     logging.info(P.to_string())
-
     
     # create Theano variables for input and target minibatch
     input_var = T.tensor4('inputs')
@@ -62,15 +60,16 @@ if __name__ == "__main__":
 
     num_epochs = 400
 
-    metric_names = ['Loss  ','L2    ','Accuracy','Dice  ','Precision','Recall']
-    train_metrics_all = []
-    val_metrics_all = []
+    metric_names_initial = ['Loss','L2','Accuracy','Dice']
+    train_metrics = metrics.Metrics("train", metric_names_initial, n_classes=3)
+    val_metrics = metrics.Metrics("validation", metric_names_initial, n_classes=3)
     
     generator = partial(patch_sampling.extract_random_patches, patch_size=P.INPUT_SIZE, crop_size=OUTPUT_SIZE)
+    
+    
     logging.info("Starting training...")
     for epoch in range(P.N_EPOCHS):
         # In each epoch, we do a full pass over the training data:
-        train_batches = 0
         start_time = time.time()
 
         np.random.shuffle(filenames_train)
@@ -79,17 +78,14 @@ if __name__ == "__main__":
                                             multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                             n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
 
-        train_metrics = []
-        val_metrics = []
 
         for i, batch in enumerate(tqdm(train_gen)):
             inputs, targets, weights, _ = batch
 
             err, l2_loss, acc, dice, true, prob, prob_b = train_fn(inputs, targets, weights)
-            tp,tn,fp,fn = metrics.calc_errors(true, prob_b)
 
-            train_metrics.append([err, l2_loss, acc, dice, tp, tn, fp, fn])
-            train_batches += 1
+            train_metrics.append([err, l2_loss, acc, dice])
+            train_metrics.append_prediction(true, prob_b)
 
             if i % 10 == 0:
                 im = np.hstack((
@@ -98,9 +94,9 @@ if __name__ == "__main__":
 
                 plt.imsave(os.path.join(image_folder,'train_epoch{}.png'.format(epoch)),im)
 
-        # And a full pass over the validation data:
-        val_batches = 0
+        metric_names, train_values = train_metrics.batch_done()
 
+        # And a full pass over the validation data:
         np.random.shuffle(filenames_val)
         val_gen = ParallelBatchIterator(generator, filenames_val, ordered=False,
                                             batch_size=P.BATCH_SIZE_VALIDATION,
@@ -111,10 +107,9 @@ if __name__ == "__main__":
             inputs, targets, weights, _ = batch
 
             err, l2_loss, acc, dice, true, prob, prob_b = val_fn(inputs, targets, weights)
-            tp,tn,fp,fn = metrics.calc_errors(true, prob_b)
 
-            val_metrics.append([err, l2_loss, acc, dice, tp, tn, fp, fn])
-            val_batches += 1
+            val_metrics.append([err, l2_loss, acc, dice])
+            val_metrics.append_prediction(true, prob_b)
 
             if i % 30 == 0: #Create image every 10th image
                 im = np.hstack((
@@ -124,41 +119,31 @@ if __name__ == "__main__":
                 plt.imsave(os.path.join(image_folder,'val_epoch{}.png'.format(epoch)),im)
                 plt.close()
 
-        train_metrics = np.sum(np.array(train_metrics),axis=0)/train_batches
-        val_metrics = np.sum(np.array(val_metrics),axis=0)/val_batches
-
-        precision_train = train_metrics[4] / (train_metrics[4]+train_metrics[6])
-        recall_train = train_metrics[4] / (train_metrics[4]+train_metrics[7])
-
-        precision_val = val_metrics[4] / (val_metrics[4]+val_metrics[6])
-        recall_val = val_metrics[4] / (val_metrics[4]+val_metrics[7])
-
-        train_metrics = list(train_metrics[:4]) + [precision_train,recall_train] #Strip off false positives et al
-        val_metrics = list(val_metrics[:4]) + [precision_val,recall_val]
+        metric_names, val_values = val_metrics.batch_done()
 
         # Then we print the results for this epoch:
         logging.info("Epoch {} of {} took {:.3f}s".format(
             epoch + 1, P.N_EPOCHS, time.time() - start_time))
 
-        for name, train_metric, val_metric in zip(metric_names, train_metrics, val_metrics):
-            name = name.rjust(10," ") #Pad the name until 10 characters long
+        for name, train_metric, val_metric in zip(metric_names, train_values, val_values):
+            name = name.rjust(20," ") #Pad the name until 10 characters long
             logging.info("{}:\t {:.6f}\t{:.6f}".format(name,train_metric,val_metric))
 
         if epoch % P.SAVE_EVERY_N_EPOCH == 0:
             logging.info("Saving model")
             np.savez_compressed(os.path.join(model_folder,'{}_epoch{}.npz'.format(model_name, epoch)), *lasagne.layers.get_all_param_values(network))
 
-        train_metrics_all.append(train_metrics)
-        val_metrics_all.append(val_metrics)
+        labels, train_values_all = train_metrics.values_per_epoch()
+        labels, val_values_all = val_metrics.values_per_epoch()
 
-        for name, train_vals, val_vals in zip(metric_names, zip(*train_metrics_all),zip(*val_metrics_all)):
+        for label, train_vals, val_vals in zip(labels, train_values_all,val_values_all):
             plt.figure()
             plt.plot(train_vals)
             plt.plot(val_vals)
-            plt.ylabel(name)
+            plt.ylabel(label)
             plt.xlabel("Epoch")
 
-            plt.savefig(os.path.join(plot_folder, '{}.png'.format(name)))
+            plt.savefig(os.path.join(plot_folder, '{}.png'.format(label)))
             plt.close()
 
         logging.info("\n")
