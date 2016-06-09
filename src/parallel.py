@@ -2,7 +2,6 @@ from __future__ import division
 import math
 from multiprocessing import Process, Queue, JoinableQueue, Value
 from threading import Thread
-
 from functools import partial
 
 class ParallelBatchIterator(object):
@@ -45,7 +44,6 @@ class ParallelBatchIterator(object):
 		# Run as consumer (read items from queue, in current thread)
 		for x in xrange(n_batches):
 			item = queue.get()
-			#print queue.qsize(), "GET"
 			yield item # Yield the item to the consumer (user)
 			queue.task_done()
 
@@ -113,14 +111,13 @@ def _produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered)
 		result = generator(task)
 
 		# Put result onto the 'done'-queue
-		while(True):
+		while True:
 			# My turn to add job result (to keep it in order)?
 			if last_queued_job.value == job_index-1 or not ordered:
 
 				with last_queued_job.get_lock():
 					result_queue.put(result)
 					last_queued_job.value += 1
-					#print id, " worker PUT", job_index
 					break
 
 def _chunks(l, n):
