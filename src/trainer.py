@@ -42,7 +42,7 @@ class Trainer(object):
 
     def plot_metrics(self):
         labels, train_values_all = self.train_metrics.values_per_epoch()
-        labels, val_values_all = self.val_metics.values_per_epoch()
+        labels, val_values_all = self.val_metrics.values_per_epoch()
 
         for label, train_vals, val_vals in zip(labels, self.train_values_all,self.val_values_all):
             plt.figure()
@@ -68,7 +68,7 @@ class Trainer(object):
 
         #Print the metrics for this epoch
         for name, train_metric, val_metric in zip(labels, train_values, val_values):
-            name = name.rjust(10," ") #Pad the name until 10 characters long
+            name = name.rjust(20," ") #Pad the name until 20 characters long
             logging.info("{}:\t {:.6f}\t{:.6f}".format(name,train_metric,val_metric))
 
         #Make plots for the metrics

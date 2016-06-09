@@ -80,7 +80,6 @@ class UNetTrainer(trainer.Trainer):
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
 
             self.do_batches(self.val_fn, val_gen, self.val_metrics)
-
             self.post_epoch()
 
 
