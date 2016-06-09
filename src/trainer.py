@@ -44,7 +44,7 @@ class Trainer(object):
         labels, train_values_all = self.train_metrics.values_per_epoch()
         labels, val_values_all = self.val_metrics.values_per_epoch()
 
-        for label, train_vals, val_vals in zip(labels, self.train_values_all,self.val_values_all):
+        for label, train_vals, val_vals in zip(labels, train_values_all, val_values_all):
             plt.figure()
             plt.plot(train_vals)
             plt.plot(val_vals)
