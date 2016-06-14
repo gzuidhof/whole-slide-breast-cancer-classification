@@ -22,12 +22,12 @@ from params import params as P
 nr_classes=3
 labels_dict = {q:q+1 for q in range(nr_classes)}
 
-def process(tra_fl, msk_src, network_parameters):
-    wsi = WholeSlideImageDataSource(tra_fl, (network_parameters.image_size, network_parameters.image_size), network_parameters.data_level)
+def process(tra_fl, msk_src):
+    wsi = WholeSlideImageDataSource(tra_fl, (P.INPUT_SIZE, P.INPUT_SIZE), P.DATA_LEVEL)
     msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
     return wsi, msk
 
-def prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multiprocess=True, processes=4):
+def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=4):
 
     print "getting all masks"
     s = time.time()
@@ -36,7 +36,7 @@ def prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multi
     if multiprocess:
         pool = Pool(processes=processes)
         try:
-            process_partial = partial(process, msk_src=msk_src, network_parameters=network_parameters)
+            process_partial = partial(process, msk_src=msk_src)
             result = pool.map(process_partial, random_train_items)
             tra_wsi, tra_msk = zip(*result)
             pool.close()
@@ -50,7 +50,7 @@ def prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multi
         tra_msk = []
         for tra_fl in tqdm(random_train_items): # 20X
             c+=1
-            wsi = WholeSlideImageDataSource(tra_fl, (network_parameters.image_size, network_parameters.image_size), network_parameters.data_level)
+            wsi = WholeSlideImageDataSource(tra_fl, (P.INPUT_SIZE, P.INPUT_SIZE), P.DATA_LEVEL)
             msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
             tra_wsi.append(wsi)
             tra_msk.append(msk)
@@ -84,7 +84,7 @@ def gen(batch_size, batch_generator_lasagne):
     util.zero_center(batch[0].values()[0])
 
     images = batch[0].values()[0].astype("float32")
-    labels = batch[1].values()[0].astype("float32")
+    labels = batch[1].values()[0].astype("int32")
     return images, labels
 
 def unet_generator(wsi_filenames, msk_src, patch_size, crop=None):
@@ -154,8 +154,8 @@ def get_filenames():
     msk_fls_All = dataset.mask_folder()
     msk_src = {}
 
-    n_val_samples = [P.SUBSET]*3
-    n_train_samples = [P.SUBSET]*3
+    n_val_samples = P.SUBSET_VALIDATION
+    n_train_samples = P.SUBSET_TRAIN
 
     random_evaluation_items, msk_src = dataset.per_class_filelist(Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list, msk_fls_All, msk_src, n_val_samples)
     random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, n_train_samples)
@@ -166,25 +166,25 @@ def get_filenames():
     return filenames_train, filenames_val
 
 
-def prepare_sampler(network_parameters):
+def prepare_sampler():
     Benign_file_list, DCIS_file_list, IDC_file_list = dataset.train_filenames(shuffle=True)
     Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list = dataset.validation_filenames(shuffle=True)
 
     msk_fls_All = dataset.mask_folder()
     msk_src = {}
 
-    n_val_samples = network_parameters.num_val_samples
-    n_train_samples = network_parameters.num_train_samples
+    n_val_samples = P.SUBSET_VALIDATION
+    n_train_samples = P.SUBSET_TRAIN
     
     random_evaluation_items, msk_src = dataset.per_class_filelist(Benign_val_file_list, DCIS_val_file_list, IDC_val_file_list, msk_fls_All, msk_src, n_val_samples)
     random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, n_train_samples)
     
     print "Loading validation masks"
-    batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, network_parameters, multiprocess=True, processes=4)
+    batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, multiprocess=True, processes=4)
     validation_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_validation)
     
     print "Loading train masks"
-    batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, network_parameters, multiprocess=True, processes=4)
+    batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=4)
     train_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_train)
         
     return train_generator, validation_generator
