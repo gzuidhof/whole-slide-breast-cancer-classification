@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import sys
 import time
 from ConfigParser import ConfigParser
@@ -28,9 +29,13 @@ class Params():
 
         self.SUBSET = None if cf.get('dataset','subset')=='None' else cf.getint('dataset','subset')
 
+        self.SUBSET_TRAIN = map(int, cf.get('dataset', 'subset_train').split())
+        self.SUBSET_VALIDATION = map(int, cf.get('dataset', 'subset_validation').split())
+
         self.FILENAMES_TRAIN = cf.get('dataset','filenames_train')
         self.FILENAMES_VALIDATION = cf.get('dataset','filenames_validation')
         self.DATA_FOLDER = cf.get('dataset','data_folder')
+        self.DATA_LEVEL = cf.getint('dataset', 'data_level')
 
 
         # Network
