@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import sys
 import time
 from ConfigParser import ConfigParser
@@ -60,6 +59,9 @@ class Params():
         self.BATCH_SIZE_TRAIN = cf.getint('updates', 'batch_size_train')
         self.BATCH_SIZE_VALIDATION = cf.getint('updates', 'batch_size_validation')
         self.N_EPOCHS = cf.getint('updates', 'n_epochs')
+
+        self.EPOCH_SAMPLES_TRAIN = cf.getint('updates', 'epoch_samples_train')
+        self.EPOCH_SAMPLES_VALIDATION = cf.getint('updates', 'epoch_samples_validation')
 
         # Normalization
         self.ZERO_CENTER = cf.getboolean('normalization', 'zero_center')

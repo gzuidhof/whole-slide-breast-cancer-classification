@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import sys
 sys.setrecursionlimit(10000)
 import lasagne
