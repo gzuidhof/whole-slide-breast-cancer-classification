@@ -28,13 +28,10 @@ class Params():
 
         self.SUBSET = None if cf.get('dataset','subset')=='None' else cf.getint('dataset','subset')
 
-        self.SUBSET_TRAIN = map(int, cf.get('dataset', 'subset_train').split())
-        self.SUBSET_VALIDATION = map(int, cf.get('dataset', 'subset_validation').split())
-
         self.FILENAMES_TRAIN = cf.get('dataset','filenames_train')
         self.FILENAMES_VALIDATION = cf.get('dataset','filenames_validation')
         self.DATA_FOLDER = cf.get('dataset','data_folder')
-        self.DATA_LEVEL = cf.getint('dataset', 'data_level')
+
 
         # Network
         self.ARCHITECTURE = cf.get('network', 'architecture')
@@ -44,6 +41,10 @@ class Params():
         self.DEPTH = cf.getint('network', 'depth')
         self.BRANCHING_FACTOR = cf.getint('network', 'branching_factor')
         self.BATCH_NORMALIZATION = cf.getboolean('network', 'batch_normalization')
+        self.BATCH_NORMALIZATION_ALPHA = cf.getfloat('network', 'batch_normalization_alpha')
+        self.DROPOUT = cf.getfloat('network', 'dropout')
+        self.SPATIAL_DROPOUT = cf.getfloat('network', 'spatial_dropout')
+        self.GAUSSIAN_NOISE = cf.getfloat('network', 'gaussian_noise')
 
         # Updates
         self.OPTIMIZATION = cf.get('updates', 'optimization')
@@ -54,8 +55,6 @@ class Params():
         self.BATCH_SIZE_TRAIN = cf.getint('updates', 'batch_size_train')
         self.BATCH_SIZE_VALIDATION = cf.getint('updates', 'batch_size_validation')
         self.N_EPOCHS = cf.getint('updates', 'n_epochs')
-        self.EPOCH_SAMPLES_TRAIN = cf.getint('updates','epoch_samples_train')
-        self.EPOCH_SAMPLES_VALIDATION = cf.getint('updates','epoch_samples_validation')
 
         # Normalization
         self.ZERO_CENTER = cf.getboolean('normalization', 'zero_center')
@@ -64,6 +63,9 @@ class Params():
         else:
             self.MEAN_PIXEL = map(float, cf.get('normalization', 'mean_pixel').split())
 
+        # Preprocessing
+        self.RANDOM_CROP = cf.getint('preprocessing', 'random_crop')
+        self.ERODE_SEGMENTATION = cf.getint('preprocessing', 'erode_segmentation')
 
         # Augmentation
         self.AUGMENT = cf.getboolean('augmentation', 'augment')

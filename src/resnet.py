@@ -12,18 +12,19 @@ from lasagne.updates import nesterov_momentum
 import theano
 import theano.tensor as T
 import numpy as np
+from params import params as P
 
 LR_SCHEDULE = {
-    0: 0.01,
-    8: 0.1,
-    60: 0.01,
-    100: 0.001,
+    0: 0.012,
+    6: 0.12,
+    80: 0.012,
+    120: 0.0012,
 }
 
-PIXELS = 224
+PIXELS = P.INPUT_SIZE
 imageSize = PIXELS * PIXELS
-num_features = imageSize * 3
-num_classes = 3
+num_classes = P.N_CLASSES
+n_channels = P.CHANNELS
 
 he_norm = HeNormal(gain='relu')
 
@@ -246,7 +247,7 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
         return block
 
     # Building the network
-    l_in = InputLayer(shape=(None, 3, PIXELS, PIXELS), input_var=input_var)
+    l_in = InputLayer(shape=(None, n_channels, PIXELS, PIXELS), input_var=input_var)
 
     # first layer, output is 16 x 64 x 64
     l = batch_norm(ConvLayer(l_in, num_filters=n_filters[0], filter_size=(3,3), stride=(1,1), nonlinearity=rectify, pad='same', W=he_norm))
@@ -283,33 +284,34 @@ def define_updates(output_layer, X, Y):
     output_test = lasagne.layers.get_output(output_layer, deterministic=True)
 
     # set up the loss that we aim to minimize when using cat cross entropy our Y should be ints not one-hot
-    loss = lasagne.objectives.categorical_crossentropy(output_train, Y)
+    loss = lasagne.objectives.categorical_crossentropy(T.clip(output_train,0.000001,0.999999), Y)
     loss = loss.mean()
 
     acc = T.mean(T.eq(T.argmax(output_train, axis=1), Y), dtype=theano.config.floatX)
 
     # if using ResNet use L2 regularization
     all_layers = lasagne.layers.get_all_layers(output_layer)
-    l2_penalty = lasagne.regularization.regularize_layer_params(all_layers, lasagne.regularization.l2) * 0.0001
+    l2_penalty = lasagne.regularization.regularize_layer_params(all_layers, lasagne.regularization.l2) * P.L2_LAMBDA
     loss = loss + l2_penalty
 
     # set up loss functions for validation dataset
-    test_loss = lasagne.objectives.categorical_crossentropy(output_test, Y)
+    test_loss = lasagne.objectives.categorical_crossentropy(T.clip(output_test,0.000001,0.999999), Y)
     test_loss = test_loss.mean()
+    test_loss = test_loss + l2_penalty
 
     test_acc = T.mean(T.eq(T.argmax(output_test, axis=1), Y), dtype=theano.config.floatX)
 
     # get parameters from network and set up sgd with nesterov momentum to update parameters, l_r is shared var so it can be changed
     l_r = theano.shared(np.array(LR_SCHEDULE[0], dtype=theano.config.floatX))
     params = lasagne.layers.get_all_params(output_layer, trainable=True)
-    updates = nesterov_momentum(loss, params, learning_rate=l_r, momentum=0.94)
+    updates = nesterov_momentum(loss, params, learning_rate=l_r, momentum=P.MOMENTUM)
     #updates = adam(loss, params, learning_rate=l_r)
 
+    prediction_binary = T.argmax(output_train, axis=1)
+    test_prediction_binary = T.argmax(output_test, axis=1)
+
     # set up training and prediction functions
-    train_fn = theano.function(inputs=[X,Y], outputs=[loss, l2_penalty, acc], updates=updates)
-    valid_fn = theano.function(inputs=[X,Y], outputs=[test_loss, l2_penalty, test_acc])
+    train_fn = theano.function(inputs=[X,Y], outputs=[loss, l2_penalty, acc, prediction_binary, output_train[:,1]], updates=updates)
+    valid_fn = theano.function(inputs=[X,Y], outputs=[test_loss, l2_penalty, test_acc, test_prediction_binary, output_test[:,1]])
 
     return train_fn, valid_fn, l_r
-
-
-        

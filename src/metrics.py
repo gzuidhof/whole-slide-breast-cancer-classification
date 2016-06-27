@@ -4,7 +4,7 @@ import numpy as np
 def _calc_errors(truth, prediction, class_number=1):
     tp = np.sum(np.equal(truth,class_number)*np.equal(prediction,class_number))
     tn = np.sum(np.not_equal(truth,class_number)*np.not_equal(prediction,class_number))
-    
+
     fp = np.sum(np.not_equal(truth,class_number)*np.equal(prediction,class_number))
     fn = np.sum(np.equal(truth,class_number)*np.not_equal(prediction,class_number))
 
@@ -25,13 +25,13 @@ class Metrics(object):
         # One value per batch
         self.batch_values = []
         self.batch_errors = {n:[] for n in range(n_classes)}
-        
+
         self.labels = []
 
     def append(self, metrics):
         self.batch_values.append(metrics)
 
-    def append_prediction(self, prediction, truth):
+    def append_prediction(self, truth, prediction):
         for c in range(self.n_classes):
             self.batch_errors[c].append(_calc_errors(truth, prediction, c))
 
@@ -52,14 +52,14 @@ class Metrics(object):
 
                 specificity = tn/(fp+tn)
                 precision = tp/(tp+fp)
-                recall = tn/(tn+fp)
+                recall = tp/(tp+fn)
 
                 values += [specificity, precision, recall]
                 new_labels = ["Specificity", "Precision", "Recall"]
 
-                if len(classes) > 0:
+                if len(classes) > 1:
                     new_labels = [l+"_class"+str(c) for l in new_labels]
-                    
+
                 labels += new_labels
 
         self.values.append(values)
@@ -71,18 +71,3 @@ class Metrics(object):
 
     def values_per_epoch(self):
         return self.labels, zip(*self.values)
-
-
-
-    
-
-
-
-                
-
-
-
-
-
-
-

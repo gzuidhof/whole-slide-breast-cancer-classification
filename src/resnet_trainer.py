@@ -31,7 +31,7 @@ class ResNetTrainer(trainer.Trainer):
         target_var = T.ivector('targets')
 
         logging.info("Defining network")
-        net = resnet.ResNet_FullPre_Wide(input_var, 3,2)
+        net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
         self.network = net
         train_fn, val_fn, l_r = resnet.define_updates(self.network, input_var, target_var)
 
@@ -43,10 +43,10 @@ class ResNetTrainer(trainer.Trainer):
         for i, batch in enumerate(tqdm(batch_generator)):
             inputs, targets = batch
             targets = np.array(np.argmax(targets, axis=1), dtype=np.int32)
-            err, l2_loss, acc = fn(inputs, targets)
+            err, l2_loss, acc, prediction, _ = fn(inputs, targets)
 
             metrics.append([err, l2_loss, acc])
-            #metrics.append_prediction(true, prob_b)
+            metrics.append_prediction(targets, prediction)
 
     def train(self, generator_train, X_train, generator_val, X_val):
         #filenames_train, filenames_val = patch_sampling.get_filenames()
@@ -57,8 +57,8 @@ class ResNetTrainer(trainer.Trainer):
             self.pre_epoch()
 
             if epoch in LR_SCHEDULE:
+                logging.info("Setting learning rate to {}".format(LR_SCHEDULE[epoch]))
                 self.l_r.set_value(LR_SCHEDULE[epoch])
-
             #Full pass over the training data
             train_gen = ParallelBatchIterator(generator_train, X_train, ordered=False,
                                                 batch_size=1,
@@ -86,4 +86,3 @@ if __name__ == "__main__":
 
     trainer = ResNetTrainer()
     trainer.train(train_generator, X_train, validation_generator, X_val)
-    

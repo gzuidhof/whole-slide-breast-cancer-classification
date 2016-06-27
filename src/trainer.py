@@ -17,7 +17,7 @@ class Trainer(object):
     def __init__(self, metric_names):
         self.model_name = P.MODEL_ID
         self.setup_folders()
-        
+
         initialize_logger(os.path.join(self.model_folder, 'log.txt').format(self.model_name))
         P.write_to_file(os.path.join(self.model_folder, 'config.ini'))
         logging.info(P.to_string())
@@ -27,11 +27,11 @@ class Trainer(object):
         self.epoch = -1
 
     def setup_folders(self):
-        self.model_folder = os.path.join('../models',self.model_name)
+        self.model_folder = os.path.join('../../models',self.model_name)
         self.plot_folder = os.path.join(self.model_folder, 'plots')
         self.image_folder = os.path.join(self.model_folder, 'images')
 
-        folders = ['../models', self.model_folder, self.plot_folder, self.image_folder]
+        folders = ['../../models', self.model_folder, self.plot_folder, self.image_folder]
         map(util.make_dir_if_not_present, folders)
 
 
@@ -50,10 +50,10 @@ class Trainer(object):
             plt.plot(val_vals)
             plt.ylabel(label)
             plt.xlabel("Epoch")
+            plt.ylim(0,min(1, max(val_vals)*1.5))
 
             plt.savefig(os.path.join(self.plot_folder, '{}.png'.format(label)))
             plt.close()
-
 
     def pre_epoch(self):
         self.start_time = time.time()
@@ -78,5 +78,5 @@ class Trainer(object):
         if self.epoch % P.SAVE_EVERY_N_EPOCH == 0:
             self.save_model()
 
-        
+
         logging.info("\n")
