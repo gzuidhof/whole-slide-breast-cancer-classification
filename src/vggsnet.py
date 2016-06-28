@@ -10,6 +10,7 @@ import lasagne.layers
 
 from mirror_padding import MirrorPadLayer
 
+#Very simple network for testing
 
 def define_network(network_parameters, input_var):
     net = {}
