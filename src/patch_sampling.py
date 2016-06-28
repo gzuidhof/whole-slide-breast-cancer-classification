@@ -16,6 +16,7 @@ from deepr.data_processing.simple_operations import OrdinalLabelVectorizer
 import util
 import dataset
 import loss_weighting
+import augment
 
 from params import params as P
 
@@ -23,7 +24,7 @@ nr_classes=3
 labels_dict = {q:q+1 for q in range(nr_classes)}
 
 def process(tra_fl, msk_src):
-    wsi = WholeSlideImageDataSource(tra_fl, (P.INPUT_SIZE, P.INPUT_SIZE), P.DATA_LEVEL)
+    wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
     msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
     return wsi, msk
 
@@ -50,7 +51,7 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
         tra_msk = []
         for tra_fl in tqdm(random_train_items): # 20X
             c+=1
-            wsi = WholeSlideImageDataSource(tra_fl, (P.INPUT_SIZE, P.INPUT_SIZE), P.DATA_LEVEL)
+            wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
             msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
             tra_wsi.append(wsi)
             tra_msk.append(msk)
@@ -72,7 +73,7 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
     batch_generator_lasagne.select_inputs(["image"])
     batch_generator_lasagne.select_labels(["label"])
 
-    batch_generator_lasagne.get_batch(9)
+    
 
     print "... is done"
     return batch_generator_lasagne
@@ -80,10 +81,20 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
 #Generates a batch of given size by calling supplied generator
 def gen(batch_size, batch_generator_lasagne):
     batch = batch_generator_lasagne.get_batch(batch_size)
-    batch[0].values()[0] = util.random_flips(batch[0].values()[0])
-    util.zero_center(batch[0].values()[0])
 
-    images = batch[0].values()[0].astype("float32")
+    images = batch[0].values()[0]
+    if P.AUGMENT:
+        images = augment.augment(images)
+
+    offset = (images.shape[2] - P.INPUT_SIZE) / 2
+            
+    if offset > 0:
+        images = images[:,:,offset:-offset,offset:-offset]
+
+    if P.ZERO_CENTER:
+        util.zero_center(images)
+
+    images = images.astype("float32")
     labels = batch[1].values()[0].astype("int32")
     return images, labels
 
@@ -91,8 +102,8 @@ def unet_generator(wsi_filenames, msk_src, patch_size, crop=None):
     
     filenames = [(im,msk_src[im]) for im in wsi_filenames]
     
+    # A generator function, which returns images,masks,weights,filenames lists
     def genny(filenames):
-        
         return extract_random_patches(filenames, patch_size, crop)
     
     return genny
