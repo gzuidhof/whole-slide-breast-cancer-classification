@@ -2,10 +2,13 @@ import sys
 import time
 from ConfigParser import ConfigParser
 import StringIO
+import os
+import util
 
 class Params():
     def __init__(self, config_file_path):
         cf = ConfigParser()
+
         read_from = cf.read(config_file_path)
 
         print "Loaded configurations from (in order)", read_from
@@ -72,7 +75,6 @@ class Params():
 
         # Preprocessing
         self.RANDOM_CROP = cf.getint('preprocessing', 'random_crop')
-        self.ERODE_SEGMENTATION = cf.getint('preprocessing', 'erode_segmentation')
 
         # Augmentation
         self.AUGMENT = cf.getboolean('augmentation', 'augment')
@@ -99,4 +101,8 @@ class Params():
         with open(filepath, 'w') as f:
             self.CONFIG.write(f)
 
-params = Params(['../config/default.ini']+sys.argv[1:])
+
+if util.is_interactive(): #Jupyter notebook
+    params = Params([os.path.dirname(__file__)+'/../config/default.ini', os.path.dirname(__file__)+'/../config/notebook.ini'])
+else:
+    params = Params([os.path.dirname(__file__)+'/../config/default.ini']+sys.argv[1:])
