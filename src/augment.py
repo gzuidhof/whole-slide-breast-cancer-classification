@@ -25,11 +25,8 @@ def augment(images):
     # Translation shift
     shift_x = np.random.uniform(*P.AUGMENTATION_PARAMS['translation_range'])
     shift_y = np.random.uniform(*P.AUGMENTATION_PARAMS['translation_range'])
-    rotation_degrees = np.random.uniform(*P.AUGMENTATION_PARAMS['rotation_range'])
-    zoom_f = np.random.uniform(*P.AUGMENTATION_PARAMS['zoom_range'])
-    zoom_factor = 1 + (zoom_f/2-zoom_f*np.random.random())
-
-    print zoom_factor
+    rotation_degrees = int(np.random.uniform(*P.AUGMENTATION_PARAMS['rotation_range']))
+    zoom_factor = np.random.uniform(*P.AUGMENTATION_PARAMS['zoom_range'])
 
     if CV2_AVAILABLE:
         M = cv2.getRotationMatrix2D((center, center), rotation_degrees, zoom_factor)
@@ -47,11 +44,12 @@ def augment(images):
                 image = cv2.flip(image, 1)
         else:
 
-            rotate(image, rotation_degrees, reshape=False, output=image)
-            image = zoom(image, [1,zoom_factor,zoom_factor])
-            image = crop_or_pad(image, pixels, 0)
-            shift(image, [0,shift_x,shift_y], output=image)
-
+            if rotation_degrees > 0:
+                rotate(image, rotation_degrees, reshape=False, output=image)
+            #image = zoom(image, [1,zoom_factor,zoom_factor])
+            if shift_x > 0 or shift_y > 0:
+                shift(image, [0,shift_x,shift_y], output=image)
+            
             if random_flip_x:
                 image = flip_axis(image, 1)
             if random_flip_y:
@@ -59,13 +57,15 @@ def augment(images):
 
         images[i] = image
 
+    images = crop(images, P.INPUT_SIZE)
     return images
 
-def crop(image, desired_size):
-    offset = (image - desired_size) / 2
-            
+def crop(images, desired_size):
+    offset = (images.shape[2] - desired_size) // 2
+    
     if offset > 0:
-        batch[0].values()[0] = batch[0].values()[0][:,:,offset:-offset,offset:-offset]
+        return images[:,:,offset:-offset,offset:-offset]
+    return images
 
 
 def crop_or_pad(image, desired_size, pad_value):
