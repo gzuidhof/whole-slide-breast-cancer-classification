@@ -1,8 +1,16 @@
+import numpy as np
 from glob import glob
 import os
 import random
 import ntpath
 from params import params as P
+
+label_names = {
+	0: 'Benign',
+	1: 'DCIS',
+	2: 'IDC'
+}
+
 
 
 def train_filenames(shuffle=True):
@@ -49,3 +57,8 @@ def per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_
 		msk_src[random_Samples[i]] = msk_fls[i]
 	return random_Samples, msk_src
 
+def label_name(label):
+	if not isinstance(label, (int, long)): 
+		return label_names[np.argmax(label)]
+	else:
+		return label_names[label]
