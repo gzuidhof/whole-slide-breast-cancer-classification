@@ -83,19 +83,21 @@ def gen(batch_size, batch_generator_lasagne):
     batch = batch_generator_lasagne.get_batch(batch_size)
 
     images = batch[0].values()[0]
+
     if P.AUGMENT:
         images = augment.augment(images)
 
-    offset = (images.shape[2] - P.INPUT_SIZE) / 2
+    offset = (images.shape[2] - P.INPUT_SIZE) // 2
             
     if offset > 0:
         images = images[:,:,offset:-offset,offset:-offset]
 
     if P.ZERO_CENTER:
-        util.zero_center(images)
+        util.zero_center(images, P.MEAN_PIXEL)
 
     images = images.astype("float32")
     labels = batch[1].values()[0].astype("int32")
+
     return images, labels
 
 def unet_generator(wsi_filenames, msk_src, patch_size, crop=None):
@@ -191,11 +193,11 @@ def prepare_sampler():
     random_train_items, msk_src = dataset.per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, n_train_samples)
     
     print "Loading validation masks"
-    batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, multiprocess=True, processes=4)
+    batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, multiprocess=True, processes=6)
     validation_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_validation)
     
     print "Loading train masks"
-    batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=4)
+    batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=6)
     train_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_train)
         
     return train_generator, validation_generator
