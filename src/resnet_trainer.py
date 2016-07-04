@@ -81,8 +81,8 @@ class ResNetTrainer(trainer.Trainer):
 if __name__ == "__main__":
     train_generator, validation_generator = patch_sampling.prepare_sampler()
 
-    X_train = [P.BATCH_SIZE_TRAIN]*P.EPOCH_SAMPLES_TRAIN
-    X_val = [P.BATCH_SIZE_VALIDATION]*P.EPOCH_SAMPLES_VALIDATION
+    X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN//P.BATCH_SIZE_TRAIN)
+    X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION//P.BATCH_SIZE_VALIDATION)
 
     trainer = ResNetTrainer()
     trainer.train(train_generator, X_train, validation_generator, X_val)

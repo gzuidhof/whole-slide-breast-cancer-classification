@@ -27,11 +27,11 @@ class Trainer(object):
         self.epoch = -1
 
     def setup_folders(self):
-        self.model_folder = os.path.join('../../models',self.model_name)
+        self.model_folder = os.path.join('../models',self.model_name)
         self.plot_folder = os.path.join(self.model_folder, 'plots')
         self.image_folder = os.path.join(self.model_folder, 'images')
 
-        folders = ['../../models', self.model_folder, self.plot_folder, self.image_folder]
+        folders = ['../models', self.model_folder, self.plot_folder, self.image_folder]
         map(util.make_dir_if_not_present, folders)
 
 
@@ -50,7 +50,7 @@ class Trainer(object):
             plt.plot(val_vals)
             plt.ylabel(label)
             plt.xlabel("Epoch")
-            plt.ylim(0,min(1, max(val_vals)*1.5))
+            plt.ylim(0,max(1, max(val_vals)*1.5))
 
             plt.savefig(os.path.join(self.plot_folder, '{}.png'.format(label)))
             plt.close()
