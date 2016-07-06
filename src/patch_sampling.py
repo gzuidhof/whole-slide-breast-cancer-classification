@@ -15,7 +15,7 @@ from deepr.data_processing.simple_operations import OrdinalLabelVectorizer
 
 import util
 import dataset
-import loss_weighting
+#import loss_weighting
 import augment
 
 from params import params as P
