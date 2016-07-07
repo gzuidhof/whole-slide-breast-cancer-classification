@@ -21,10 +21,10 @@ from params import params as P
 #    120: 0.00012,
 #}
 LR_SCHEDULE = {
-    0: 0.01
-    8: 0.1,
-    80: 0.01,
-    120: 0.001,
+    0: 0.005,
+    8: 0.05,
+    80: 0.005,
+    120: 0.0005,
 }
 
 
@@ -211,7 +211,7 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
 
     And 'Wide Residual Networks', Sergey Zagoruyko, Nikos Komodakis 2016 (http://arxiv.org/pdf/1605.07146v1.pdf)
 
-    Depth = 6n + 2
+    Depth = 8n + 2
     '''
     n_filters = {0:16, 1:16*k, 2:32*k, 3:64*k, 4:96*k}
 

@@ -21,6 +21,7 @@ if __name__ == "__main__":
     import resnet
     import patch_sampling
     from resnet import LR_SCHEDULE
+    from dataset import label_name
 
 class ResNetTrainer(trainer.Trainer):
     def __init__(self):
@@ -39,14 +40,40 @@ class ResNetTrainer(trainer.Trainer):
         self.val_fn = val_fn
         self.l_r = l_r
 
+    def save_debug_images(self, n, images, labels, metrics):
+        im = images.transpose(0,2,3,1)
+
+        im[:,:,:,0] += P.MEAN_PIXEL[0]
+        im[:,:,:,1] += P.MEAN_PIXEL[1]
+        im[:,:,:,2] += P.MEAN_PIXEL[2]
+
+        f, axarr = plt.subplots(4,4,figsize=(12,12))
+        for i in range(16):
+            x = i%4
+            y = i/4
+            axarr[y,x].imshow(im[i])
+            axarr[y,x].set_title(label_name(labels[i]))
+            axarr[y,x].axis('off')
+        
+        #print np.mean(im)
+        plt.subplots_adjust(wspace = -0.3, hspace=0.15)
+
+        plt.savefig(os.path.join(self.image_folder, '{}_{}.png'.format(metrics.name,self.epoch, n)))
+        plt.close()
+
+
     def do_batches(self, fn, batch_generator, metrics):
         for i, batch in enumerate(tqdm(batch_generator)):
+
             inputs, targets = batch
             targets = np.array(np.argmax(targets, axis=1), dtype=np.int32)
             err, l2_loss, acc, prediction, _ = fn(inputs, targets)
 
             metrics.append([err, l2_loss, acc])
             metrics.append_prediction(targets, prediction)
+
+            if i == 0:
+                self.save_debug_images(i, inputs, targets, metrics)
 
     def train(self, generator_train, X_train, generator_val, X_val):
         #filenames_train, filenames_val = patch_sampling.get_filenames()
@@ -86,3 +113,5 @@ if __name__ == "__main__":
 
     trainer = ResNetTrainer()
     trainer.train(train_generator, X_train, validation_generator, X_val)
+    #trainer.train(train_generator, X_train, train_generator, X_val)
+    #trainer.train(validation_generator, X_train, validation_generator, X_val)
