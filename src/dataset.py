@@ -19,7 +19,7 @@ def train_filenames(shuffle=True):
 	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'IDC_train','*.tif')))
 
 	if shuffle:
-		 map(random.shuffle, [benign, dcis, idc])
+		 map(np.random.shuffle, [benign, dcis, idc])
 
 	return benign, dcis, idc
 
@@ -29,7 +29,7 @@ def validation_filenames(shuffle=True):
 	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'IDC_validation','*.tif')))
 
 	if shuffle:
-		 map(random.shuffle, [benign, dcis, idc])
+		 map(np.random.shuffle, [benign, dcis, idc])
 
 	return benign, dcis, idc
 
@@ -55,10 +55,11 @@ def per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_
 
 	for i in range(len(random_Samples)):
 		msk_src[random_Samples[i]] = msk_fls[i]
+
 	return random_Samples, msk_src
 
 def label_name(label):
-	if not isinstance(label, (int, long)): 
-		return label_names[np.argmax(label)]
-	else:
+	try:
 		return label_names[label]
+	except:
+		return label_names[np.argmax(label)]
