@@ -29,10 +29,7 @@ def process(tra_fl, msk_src):
     return wsi, msk
 
 def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=4):
-
-    print "getting all masks"
     s = time.time()
-    c = 0
 
     if multiprocess:
         pool = Pool(processes=processes)
@@ -49,12 +46,12 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
     else:
         tra_wsi = []
         tra_msk = []
-        for tra_fl in tqdm(random_train_items): # 20X
-            c+=1
+        for tra_fl in tqdm(random_train_items):
             wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
             msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
             tra_wsi.append(wsi)
             tra_msk.append(msk)
+
     print "Done in ", time.time()-s
 
     patch_extractor = WholeSlideImageRandomPatchExtractor(tra_wsi, tra_msk)
