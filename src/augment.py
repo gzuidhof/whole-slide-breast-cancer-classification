@@ -27,12 +27,13 @@ def augment(images):
     shift_y = np.random.uniform(*P.AUGMENTATION_PARAMS['translation_range'])
     rotation_degrees = int(np.random.uniform(*P.AUGMENTATION_PARAMS['rotation_range']))
     zoom_factor = np.random.uniform(*P.AUGMENTATION_PARAMS['zoom_range'])
-
+    n_rot_90 = np.random.choice(P.AUGMENTATION_PARAMS['rotation_90'])
+    
     if CV2_AVAILABLE:
         M = cv2.getRotationMatrix2D((center, center), rotation_degrees, zoom_factor)
         M[0, 2] += shift_x
         M[1, 2] += shift_y
-
+    
     for i in range(len(images)):
         image = images[i]
 
@@ -43,7 +44,6 @@ def augment(images):
             if random_flip_y:
                 image = cv2.flip(image, 1)
         else:
-
             if rotation_degrees > 0:
                 rotate(image, rotation_degrees, reshape=False, output=image)
             #image = zoom(image, [1,zoom_factor,zoom_factor])
@@ -54,6 +54,9 @@ def augment(images):
                 image = flip_axis(image, 1)
             if random_flip_y:
                 image = flip_axis(image, 2)
+
+            if n_rot_90 > 0:
+                image = np.rot90(image.transpose(1,2,0), n_rot_90).transpose(2,0,1)
 
         images[i] = image
 

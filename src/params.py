@@ -82,7 +82,8 @@ class Params():
             'flip': cf.getboolean('augmentation', 'flip'),
             'zoom_range': (1.-cf.getfloat('augmentation', 'zoom'),1.+cf.getfloat('augmentation', 'zoom')),
             'rotation_range': (-cf.getfloat('augmentation', 'rotation'),cf.getfloat('augmentation', 'rotation')),
-            'translation_range': (-cf.getfloat('augmentation', 'translation'),cf.getfloat('augmentation', 'translation'))
+            'translation_range': (-cf.getfloat('augmentation', 'translation'),cf.getfloat('augmentation', 'translation')),
+            'rotation_90': [0,1,2,3] if cf.getboolean('augmentation', 'rotation_90') else [0]
         }
 
         # Misc

@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 import os
 
 def float32(k):
@@ -47,3 +48,9 @@ def make_dir_if_not_present(directory):
 def is_interactive():
     import __main__ as main
     return not hasattr(main, '__file__')
+
+def pool_progress(pool, func, work):
+    return tqdm(pool.imap(func, work), total=len(work))
+
+
+    

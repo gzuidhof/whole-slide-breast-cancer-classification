@@ -28,14 +28,14 @@ def process(tra_fl, msk_src):
     msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
     return wsi, msk
 
-def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=4):
+def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=8):
     s = time.time()
 
     if multiprocess:
         pool = Pool(processes=processes)
         try:
             process_partial = partial(process, msk_src=msk_src)
-            result = pool.map(process_partial, random_train_items)
+            result = util.pool_progress(pool, process_partial, random_train_items)
             tra_wsi, tra_msk = zip(*result)
             pool.close()
             pool.join()
