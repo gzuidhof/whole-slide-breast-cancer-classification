@@ -37,7 +37,6 @@ def mask_folder():
 	path = os.path.join(P.DATA_FOLDER, 'AllMasksMerged')
 	return path
 
-
 def per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, num_each_class):
 	random_Samples = []
 	random_Samples = (Benign_file_list[:num_each_class[0]] +

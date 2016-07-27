@@ -44,7 +44,8 @@ class ParallelBatchIterator(object):
 		# Run as consumer (read items from queue, in current thread)
 		for x in xrange(n_batches):
 			item = queue.get()
-			yield item # Yield the item to the consumer (user)
+			if item is not None:
+				yield item # Yield the item to the consumer (user)
 			queue.task_done()
 
 		queue.close()
@@ -108,7 +109,11 @@ def _produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered)
 		if job_index == -1 and task is None:
 			break
 
-		result = generator(task)
+		try:
+			result = generator(task)
+		except:
+			print "Producer failed, skipping"
+			result = None
 
 		# Put result onto the 'done'-queue
 		while True:
@@ -119,6 +124,7 @@ def _produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered)
 					result_queue.put(result)
 					last_queued_job.value += 1
 					break
+		
 
 def _chunks(l, n):
     """ Yield successive n-sized chunks from l.

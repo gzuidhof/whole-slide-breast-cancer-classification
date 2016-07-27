@@ -24,19 +24,28 @@ nr_classes=3
 labels_dict = {q:q+1 for q in range(nr_classes)}
 
 def process(tra_fl, msk_src):
-    wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
-    msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
-    return wsi, msk
+    try:
+        wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
+        msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
+        return wsi, msk
+    except:
+        print "Skipping", tra_fl
+        return None
 
 def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=8):
     s = time.time()
+
+    if len(random_train_items) == 0:
+        print "NO TRAINING ITEMS!"
 
     if multiprocess:
         pool = Pool(processes=processes)
         try:
             process_partial = partial(process, msk_src=msk_src)
             result = util.pool_progress(pool, process_partial, random_train_items)
+            result = filter(None, result)
             tra_wsi, tra_msk = zip(*result)
+            
             pool.close()
             pool.join()
         except KeyboardInterrupt:
@@ -47,16 +56,18 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
         tra_wsi = []
         tra_msk = []
         for tra_fl in tqdm(random_train_items):
-            wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
-            msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
-            tra_wsi.append(wsi)
-            tra_msk.append(msk)
+            print tra_fl
+            try:
+                wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
+                msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
+                tra_wsi.append(wsi)
+                tra_msk.append(msk)
+            except:
+                pass
 
     print "Done in ", time.time()-s
 
     patch_extractor = WholeSlideImageRandomPatchExtractor(tra_wsi, tra_msk)
-
-
 
     train_data_source = LambdaVoxelOperation(patch_extractor, name = "image normalizer",
                                  input_names = ["image"],
