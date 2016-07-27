@@ -5,19 +5,27 @@ from lasagne.layers import LocalResponseNormalization2DLayer as NormLayer
 from lasagne.layers import NonlinearityLayer
 from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
 from lasagne.layers import MaxPool2DLayer as PoolLayer
+from lasagne.layers import batch_norm
 from lasagne.nonlinearities import softmax
 import lasagne.layers
+from lasagne.updates import nesterov_momentum, adam
 
 from mirror_padding import MirrorPadLayer
 
+import theano
+import theano.tensor as T
+import numpy as np
+from params import params as P
+
+
 LR_SCHEDULE = {
-    0: 0.005,
-    80: 0.0005,
-    120: 0.00005,
+    0: 0.01,
+    80: 0.001,
+    120: 0.0001,
 }
 
-def define_network(input_var):
-network = lasagne.layers.InputLayer(shape=(None, 3, None, None),
+def define_network(input_var, dropout_ratio=0.5):
+    network = lasagne.layers.InputLayer(shape=(None, 3, None, None),
                                         input_var=input_var)
     network = batch_norm(lasagne.layers.Conv2DLayer(
             network, num_filters=24, filter_size=(3, 3),
@@ -76,13 +84,13 @@ network = lasagne.layers.InputLayer(shape=(None, 3, None, None),
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
  # 10            
     network = batch_norm(lasagne.layers.Conv2DLayer(
-            lasagne.layers.dropout(network, p = dropout_ratio),
+            lasagne.layers.dropout(network, p = P.DROPOUT),
             num_filters=2048, filter_size=(9, 9),
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.HeNormal('relu')))
             
     network = batch_norm(lasagne.layers.Conv2DLayer(
-            lasagne.layers.dropout(network, p = dropout_ratio),
+            lasagne.layers.dropout(network, p = P.DROPOUT),
             num_filters=1024, filter_size=(1, 1),
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.HeNormal('relu')))   

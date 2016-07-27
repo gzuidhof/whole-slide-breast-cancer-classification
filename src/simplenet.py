@@ -16,11 +16,9 @@ from params import params as P
 LR_SCHEDULE = {
     0: 0.005,
     6: 0.005,
-    80: 0.0005,
-    120: 0.00005,
+    80: 0.0001,
+    120: 0.00001,
 }
-
-
 
 PIXELS = P.INPUT_SIZE
 imageSize = PIXELS * PIXELS
