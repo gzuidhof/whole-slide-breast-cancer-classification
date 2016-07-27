@@ -104,8 +104,6 @@ class ResNetTrainer(trainer.Trainer):
             self.do_batches(self.val_fn, val_gen, self.val_metrics)
             self.post_epoch()
 
-
-
 if __name__ == "__main__":
     train_generator, validation_generator = patch_sampling.prepare_sampler()
 

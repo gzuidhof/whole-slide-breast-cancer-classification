@@ -50,7 +50,7 @@ class SimpleNetTrainer(trainer.Trainer):
         f, axarr = plt.subplots(4,4,figsize=(12,12))
         for i in range(16):
             x = i%4
-            y = i/4
+            y = i//4
             axarr[y,x].imshow(im[i])
             axarr[y,x].set_title(label_name(labels[i]))
             axarr[y,x].axis('off')
