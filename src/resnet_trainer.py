@@ -32,7 +32,8 @@ class ResNetTrainer(trainer.Trainer):
         target_var = T.ivector('targets')
 
         logging.info("Defining network")
-        net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
+        #net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
+        net=resnet.ResNet_FullPreActivation(input_var, P.DEPTH)
         self.network = net
         train_fn, val_fn, l_r = resnet.define_updates(self.network, input_var, target_var)
 

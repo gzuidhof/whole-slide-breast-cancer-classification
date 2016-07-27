@@ -13,17 +13,11 @@ import theano.tensor as T
 import numpy as np
 from params import params as P
 
-#LR_SCHEDULE = {
-#    0: 0.0012,
-#    6: 0.012,
-#    80: 0.0012,
-#    120: 0.00012,
-#}
 LR_SCHEDULE = {
-    0: 0.001,
-    8: 0.001,
-    80: 0.0001,
-    120: 0.00001,
+    0: 0.00001,
+    6: 0.0001,
+    80: 0.00001,
+    120: 0.000001,
 }
 
 
@@ -35,30 +29,50 @@ n_channels = P.CHANNELS
 
 he_norm = HeNormal(gain='relu')
 
-
 def SimpleNet(input_var=None):
-    # Building the network
-    l = InputLayer(shape=(None, n_channels, PIXELS, PIXELS), input_var=input_var)
 
-    #l = batch_norm(ConvLayer(l, num_filters=16, filter_size=(7,7), stride=(2,2), nonlinearity=rectify, pad='same', W=he_norm))
-    #l = batch_norm(ConvLayer(l, num_filters=16, filter_size=(5,5), stride=(2,2), nonlinearity=rectify, pad='same', W=he_norm))
+    net = {}
+    net['input'] = InputLayer((None, P.N_CLASSES, P.INPUT_SIZE, P.INPUT_SIZE), input_var=input_var)
+    net['conv1_1'] = ConvLayer(
+        net['input'], 64, 3, pad=1, flip_filters=False)
+    net['conv1_2'] = ConvLayer(
+        net['conv1_1'], 64, 3, pad=1, flip_filters=False)
+    net['pool1'] = Pool2DLayer(net['conv1_2'], 2)
+    net['conv2_1'] = ConvLayer(
+        net['pool1'], 128, 3, pad=1, flip_filters=False)
+    net['conv2_2'] = ConvLayer(
+        net['conv2_1'], 128, 3, pad=1, flip_filters=False)
+    net['pool2'] = Pool2DLayer(net['conv2_2'], 2)
+    net['conv3_1'] = ConvLayer(
+        net['pool2'], 256, 3, pad=1, flip_filters=False)
+    net['conv3_2'] = ConvLayer(
+        net['conv3_1'], 256, 3, pad=1, flip_filters=False)
+    net['conv3_3'] = ConvLayer(
+        net['conv3_2'], 256, 3, pad=1, flip_filters=False)
+    net['pool3'] = Pool2DLayer(net['conv3_3'], 2)
+    net['conv4_1'] = ConvLayer(
+        net['pool3'], 512, 3, pad=1, flip_filters=False)
+    net['conv4_2'] = ConvLayer(
+        net['conv4_1'], 512, 3, pad=1, flip_filters=False)
+    net['conv4_3'] = ConvLayer(
+        net['conv4_2'], 512, 3, pad=1, flip_filters=False)
+    net['pool4'] = Pool2DLayer(net['conv4_3'], 2)
+    net['conv5_1'] = ConvLayer(
+        net['pool4'], 512, 3, pad=1, flip_filters=False)
+    net['conv5_2'] = ConvLayer(
+        net['conv5_1'], 512, 3, pad=1, flip_filters=False)
+    net['conv5_3'] = ConvLayer(
+        net['conv5_2'], 512, 3, pad=1, flip_filters=False)
+    net['pool5'] = Pool2DLayer(net['conv5_3'], 2)
+    net['fc6'] = DenseLayer(net['pool5'], num_units=4096)
+    net['fc6_dropout'] = DropoutLayer(net['fc6'], p=0.5)
+    net['fc7'] = DenseLayer(net['fc6_dropout'], num_units=4096)
+    net['fc7_dropout'] = DropoutLayer(net['fc7'], p=0.5)
+    net['fc8'] = DenseLayer(
+        net['fc7_dropout'], num_units=P.N_CLASSES, nonlinearity=None)
+    net['prob'] = NonlinearityLayer(net['fc8'], softmax)
 
-    l = MaxPool2DLayer(l, (4,4))
-
-    #l = batch_norm(ConvLayer(l, num_filters=32, filter_size=(3,3), stride=(2,2), nonlinearity=rectify, pad='same', W=he_norm))
-    #l = batch_norm(ConvLayer(l, num_filters=32, filter_size=(3,3), stride=(2,2), nonlinearity=rectify, pad='same', W=he_norm))
-
-    #l = MaxPool2DLayer(l, (2,2))
-
-    #l = batch_norm(ConvLayer(l, num_filters=64, filter_size=(3,3), stride=(2,2), nonlinearity=rectify, pad='same', W=he_norm))
-    #l = batch_norm(ConvLayer(l, num_filters=64, filter_size=(3,3), stride=(2,2), nonlinearity=rectify, pad='same', W=he_norm))
-
-    l = DenseLayer(l, num_units=3, W=HeNormal(), nonlinearity=rectify)
-    #l = DenseLayer(l, num_units=256, W=HeNormal(), nonlinearity=rectify)
-
-    network = DenseLayer(l, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
-
-    return network
+    return net['prob']
 
 def define_updates(output_layer, X, Y):
     output_train = lasagne.layers.get_output(output_layer)
