@@ -4,6 +4,8 @@ from ConfigParser import ConfigParser
 import StringIO
 import os
 import util
+import warnings
+import glob
 
 class Params():
     def __init__(self, config_file_path):
@@ -103,7 +105,29 @@ class Params():
             self.CONFIG.write(f)
 
 
+
+CONFIG_FOLDER = '../config/'
+
+def config_files_find(args):
+    config_files = []
+
+    for a in args:
+        if os.path.isfile(a):
+            config_files.append(a)
+            continue
+
+        matches = glob.glob(os.path.join(CONFIG_FOLDER,a)+'*.ini')
+        if len(matches) == 1:
+            config_files.append(matches[0])
+            continue
+
+        warnings.warn("CONFIG FILE NOT FOUND, OR NOT UNIQUE \"{0}\" (matches {1})".format(a, matches))
+    
+    return config_files
+
+
+
 if util.is_interactive(): #Jupyter notebook
     params = Params([os.path.dirname(__file__)+'/../config/default.ini', os.path.dirname(__file__)+'/../config/notebook.ini'])
 else:
-    params = Params([os.path.dirname(__file__)+'/../config/default.ini']+sys.argv[1:])
+    params = Params([os.path.dirname(__file__)+'/../config/default.ini']+config_files_find(sys.argv[1:]))
