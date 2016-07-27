@@ -14,10 +14,10 @@ import numpy as np
 from params import params as P
 
 LR_SCHEDULE = {
-    0: 0.00001,
-    6: 0.0001,
-    80: 0.00001,
-    120: 0.000001,
+    0: 0.005,
+    6: 0.005,
+    80: 0.0005,
+    120: 0.00005,
 }
 
 
