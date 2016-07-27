@@ -40,6 +40,13 @@ def zero_center(images, mean_pixel):
     images[:,2,:,:] -= mean_pixel[2]
     
     return images
+
+def unzero_center(images, mean_pixel):
+    images[:,0,:,:] += mean_pixel[0]
+    images[:,1,:,:] += mean_pixel[1]
+    images[:,2,:,:] += mean_pixel[2]
+
+    return images
     
 def make_dir_if_not_present(directory):
     if not os.path.exists(directory):
