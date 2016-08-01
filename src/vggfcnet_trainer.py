@@ -10,7 +10,7 @@ from functools import partial
 import patch_sampling
 import logging
 import scipy.misc
-from parallel import ParallelBatchIterator
+from cparallel import ContinuousParallelBatchIterator
 from tqdm import tqdm
 import os.path
 
@@ -63,7 +63,10 @@ class VGGFCNetTrainer(trainer.Trainer):
         
 
     def do_batches(self, fn, batch_generator, metrics):
-        for i, batch in enumerate(tqdm(batch_generator)):
+        
+        batch_size = P.EPOCH_SAMPLES_TRAIN//P.BATCH_SIZE_TRAIN if metrics.name=='train' else P.EPOCH_SAMPLES_VALIDATION//P.BATCH_SIZE_VALIDATION
+
+        for i, batch in enumerate(tqdm(batch_generator(batch_size))):
             inputs, targets = batch
 
             #print np.sum(targets,axis=0)
@@ -79,6 +82,21 @@ class VGGFCNetTrainer(trainer.Trainer):
 
     def train(self, generator_train, X_train, generator_val, X_val):
 
+        train_gen = ContinuousParallelBatchIterator(generator_train, ordered=False,
+                                                batch_size=1,
+                                                multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
+                                                n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
+                                                max_queue_size=60)
+
+        val_gen = ContinuousParallelBatchIterator(generator_val, ordered=False,
+                                                batch_size=1,
+                                                multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
+                                                n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
+                                                max_queue_size=30)               
+
+        train_gen.append(X_train)
+        val_gen.append(X_val)
+
         logging.info("Starting training...")
         for epoch in range(P.N_EPOCHS):
             self.pre_epoch()
@@ -87,20 +105,7 @@ class VGGFCNetTrainer(trainer.Trainer):
                 logging.info("Setting learning rate to {}".format(LR_SCHEDULE[epoch]))
                 self.l_r.set_value(LR_SCHEDULE[epoch])
 
-            #Full pass over the training data
-            train_gen = ParallelBatchIterator(generator_train, X_train, ordered=False,
-                                                batch_size=1,
-                                                multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
-                                                n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
-
             self.do_batches(self.train_fn, train_gen, self.train_metrics)
-
-            # And a full pass over the validation data:
-            val_gen = ParallelBatchIterator(generator_val, X_val, ordered=False,
-                                                batch_size=1,
-                                                multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
-                                                n_producers=P.N_WORKERS_LOAD_AUGMENTATION)
-
             self.do_batches(self.val_fn, val_gen, self.val_metrics)
             self.post_epoch()
 
@@ -109,8 +114,8 @@ class VGGFCNetTrainer(trainer.Trainer):
 if __name__ == "__main__":
     train_generator, validation_generator = patch_sampling.prepare_sampler()
 
-    X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN//P.BATCH_SIZE_TRAIN)
-    X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION//P.BATCH_SIZE_VALIDATION)
+    X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN//P.BATCH_SIZE_TRAIN)*P.N_EPOCHS
+    X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION//P.BATCH_SIZE_VALIDATION)*P.N_EPOCHS
 
     trainer = VGGFCNetTrainer()
     trainer.train(train_generator, X_train, validation_generator, X_val)

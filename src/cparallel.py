@@ -35,6 +35,7 @@ class ContinuousParallelBatchIterator(object):
 		self.job_queue = Queue()
 		self.last_retrieved_job = 0
 		self.last_added_job = 0
+		self.started = False
 
 	def start(self):
 		self.queue = JoinableQueue(maxsize=self.max_queue_size)
@@ -56,6 +57,8 @@ class ContinuousParallelBatchIterator(object):
 			p.daemon = True
 			p.start()
 
+		self.started = True
+
 	def append(self, todo):
 		for job in chunks(todo, self.batch_size):
 			self.job_queue.put((self.last_added_job, job))
@@ -64,6 +67,9 @@ class ContinuousParallelBatchIterator(object):
 	def __call__(self, n_batches, X=None):
 		if X is not None:
 			self.append(X)
+
+		if not self.started:
+			self.start()
 
 		n_upcoming_batches = self.last_added_job - self.last_retrieved_job
 
