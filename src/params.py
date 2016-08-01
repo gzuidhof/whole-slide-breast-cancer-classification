@@ -82,10 +82,17 @@ class Params():
         self.AUGMENT = cf.getboolean('augmentation', 'augment')
         self.AUGMENTATION_PARAMS = {
             'flip': cf.getboolean('augmentation', 'flip'),
+
             'zoom_range': (1.-cf.getfloat('augmentation', 'zoom'),1.+cf.getfloat('augmentation', 'zoom')),
             'rotation_range': (-cf.getfloat('augmentation', 'rotation'),cf.getfloat('augmentation', 'rotation')),
             'translation_range': (-cf.getfloat('augmentation', 'translation'),cf.getfloat('augmentation', 'translation')),
-            'rotation_90': [0,1,2,3] if cf.getboolean('augmentation', 'rotation_90') else [0]
+            'rotation_90': [0,1,2,3] if cf.getboolean('augmentation', 'rotation_90') else [0],
+
+            #HSV augmentation
+            'hue_range': (1.-cf.getfloat('augmentation', 'hue'), 1.+cf.getfloat('augmentation', 'hue')),
+            'saturation_range': (1.-cf.getfloat('augmentation', 'saturation'), 1.+cf.getfloat('augmentation', 'saturation')),
+            'value_range': (1.-cf.getfloat('augmentation', 'value'), 1.+cf.getfloat('augmentation', 'value'))
+
         }
 
         # Misc
