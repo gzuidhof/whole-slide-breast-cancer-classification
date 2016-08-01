@@ -118,8 +118,7 @@ def _produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered)
 		# Put result onto the 'done'-queue
 		while True:
 			# My turn to add job result (to keep it in order)?
-			if last_queued_job.value == job_index-1 or not ordered:
-
+			if not ordered or last_queued_job.value == job_index-1:
 				with last_queued_job.get_lock():
 					result_queue.put(result)
 					last_queued_job.value += 1
