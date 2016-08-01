@@ -1,7 +1,7 @@
 from __future__ import division
 from params import params as P
 import numpy as np
-
+import skimage
 
 try:
     import cv2
@@ -28,6 +28,10 @@ def augment(images):
     rotation_degrees = int(np.random.uniform(*P.AUGMENTATION_PARAMS['rotation_range']))
     zoom_factor = np.random.uniform(*P.AUGMENTATION_PARAMS['zoom_range'])
     n_rot_90 = np.random.choice(P.AUGMENTATION_PARAMS['rotation_90'])
+
+    h = np.random.uniform(*P.AUGMENTATION_PARAMS['hue_range'])
+    s = np.random.uniform(*P.AUGMENTATION_PARAMS['saturation_range'])
+    v = np.random.uniform(*P.AUGMENTATION_PARAMS['value_range'])
     
     if CV2_AVAILABLE:
         M = cv2.getRotationMatrix2D((center, center), rotation_degrees, zoom_factor)
@@ -36,6 +40,9 @@ def augment(images):
     
     for i in range(len(images)):
         image = images[i]
+
+        if h != 0 and s != 0 and v != 0:
+            image = hsv_augment(image, h,s,v)
 
         if CV2_AVAILABLE:
             image = cv2.warpAffine(image, M, (pixels, pixels))
@@ -57,6 +64,8 @@ def augment(images):
 
             if n_rot_90 > 0:
                 image = np.rot90(image.transpose(1,2,0), n_rot_90).transpose(2,0,1)
+        
+        
 
         images[i] = image
 
@@ -91,3 +100,25 @@ def flip_axis(x, axis):
     x = x[::-1, ...]
     x = x.swapaxes(0, axis)
     return x
+
+def hsv_augment(image, h, s, v, clip=True):
+    image = image.transpose(1,2,0)
+    image = skimage.color.rgb2hsv(image)
+    image[:,:,0] *= h
+    image[:,:,1] *= s
+    image[:,:,2] *= v
+
+    # Clipping prevents weird results when going above 1 and below 0 when reverting back.
+    if clip:
+        image = np.clip(image, 0.0, 1.0)
+
+    image = skimage.color.hsv2rgb(image)
+    image = image.transpose(2,0,1)
+
+    
+
+
+    return image
+
+    
+
