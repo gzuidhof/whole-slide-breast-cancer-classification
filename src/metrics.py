@@ -67,6 +67,7 @@ class Metrics(object):
         self.batch_errors = {n:[] for n in range(self.n_classes)}
         self.labels = labels
 
+
         return labels, values
 
     def values_per_epoch(self):

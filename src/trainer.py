@@ -11,6 +11,7 @@ import metrics
 import util
 from logger import initialize_logger
 from params import params as P
+import pandas as pd
 
 class Trainer(object):
 
@@ -40,7 +41,7 @@ class Trainer(object):
         save_filename = os.path.join(self.model_folder,'{}_epoch{}.npz'.format(self.model_name, self.epoch))
         np.savez_compressed(save_filename, *lasagne.layers.get_all_param_values(self.network))
 
-    def plot_metrics(self):
+    def plot_and_save_metrics(self):
         labels, train_values_all = self.train_metrics.values_per_epoch()
         labels, val_values_all = self.val_metrics.values_per_epoch()
 
@@ -54,6 +55,14 @@ class Trainer(object):
 
             plt.savefig(os.path.join(self.plot_folder, '{}.png'.format(label)))
             plt.close()
+
+
+        d = {l+"_train": v for l, v in zip(labels, train_values_all)}
+        d.update({l+"_val": v for l, v in zip(labels, val_values_all)})
+
+        df = pd.DataFrame(d)
+        df.to_csv(os.path.join(self.model_folder,'metrics.csv'))
+
 
     def pre_epoch(self):
         self.start_time = time.time()
@@ -72,7 +81,7 @@ class Trainer(object):
             logging.info("{}:\t {:.6f}\t{:.6f}".format(name,train_metric,val_metric))
 
         #Make plots for the metrics
-        self.plot_metrics()
+        self.plot_and_save_metrics()
 
         #Save the model (maybe)
         if self.epoch % P.SAVE_EVERY_N_EPOCH == 0:
