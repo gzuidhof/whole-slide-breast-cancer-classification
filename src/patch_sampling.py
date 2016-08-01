@@ -57,13 +57,10 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
         tra_msk = []
         for tra_fl in tqdm(random_train_items):
             print tra_fl
-            try:
-                wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
-                msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
-                tra_wsi.append(wsi)
-                tra_msk.append(msk)
-            except:
-                pass
+            wsi = WholeSlideImageDataSource(tra_fl, (P.PIXELS, P.PIXELS), P.DATA_LEVEL)
+            msk = WholeSlideImageClassSampler(msk_src[tra_fl], 0, nr_classes, labels_dict)
+            tra_wsi.append(wsi)
+            tra_msk.append(msk)
 
     print "Done in ", time.time()-s
 
