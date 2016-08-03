@@ -8,6 +8,9 @@ import math
 class ContinuousParallelBatchIterator(object):
 	"""
 	Uses a producer-consumer model to prepare batches on the CPU in different processes or threads (while you are training on the GPU).
+	Continuous version, continues between and after batches.
+	
+
 
 	Constructor arguments:
 		batch_generator: function which can be called to yield a new batch.
