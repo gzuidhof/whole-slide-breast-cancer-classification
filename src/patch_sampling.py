@@ -84,12 +84,12 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
     return batch_generator_lasagne
 
 #Generates a batch of given size by calling supplied generator
-def gen(batch_size, batch_generator_lasagne):
+def gen(batch_size, batch_generator_lasagne, deterministic=False):
     batch = batch_generator_lasagne.get_batch(batch_size)
 
     images = batch[0].values()[0]
 
-    if P.AUGMENT:
+    if P.AUGMENT and not deterministic:
         images = augment.augment(images)
 
     offset = (images.shape[2] - P.INPUT_SIZE) // 2
@@ -199,7 +199,7 @@ def prepare_sampler():
     
     print "Loading validation masks"
     batch_generator_lasagne_validation = prepare_lasagne_patch(random_evaluation_items, msk_src, multiprocess=True, processes=6)
-    validation_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_validation)
+    validation_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_validation, deterministic=True)
     
     print "Loading train masks"
     batch_generator_lasagne_train = prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, processes=6)

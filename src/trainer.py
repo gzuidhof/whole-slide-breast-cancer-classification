@@ -35,7 +35,6 @@ class Trainer(object):
         folders = ['../models', self.model_folder, self.plot_folder, self.image_folder]
         map(util.make_dir_if_not_present, folders)
 
-
     def save_model(self):
         logging.info("Saving model")
         save_filename = os.path.join(self.model_folder,'{}_epoch{}.npz'.format(self.model_name, self.epoch))
