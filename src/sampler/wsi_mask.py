@@ -7,7 +7,6 @@ class WSIMask(object):
         self.filename = filename
         self.image = mask_image
 
-        if self.border_distance 
         self.border_distance = border_distance
         self.data_level = data_level
         self.image = mask_image
