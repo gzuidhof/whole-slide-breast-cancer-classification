@@ -3,6 +3,7 @@ import math
 from multiprocessing import Process, Queue, JoinableQueue, Value
 from threading import Thread
 from functools import partial
+import numpy as np
 
 class ParallelBatchIterator(object):
 	"""
@@ -101,6 +102,7 @@ def _produce_helper(id, generator, jobs, result_queue, last_queued_job, ordered)
 	"""
 		What one worker executes, defined as a top level function as this is required for the Windows platform.
 	"""
+	np.random.seed()
 	while True:
 		job_index, task = jobs.get()
 
