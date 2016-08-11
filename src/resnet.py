@@ -22,9 +22,9 @@ from params import params as P
 #}
 LR_SCHEDULE = {
     0: 0.01,
-#    8: 0.05,
-    200: 0.001,
-    300: 0.0001,
+    2: 0.1,
+    150: 0.01,
+    300: 0.00005,
 }
 
 
@@ -211,7 +211,7 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
 
     And 'Wide Residual Networks', Sergey Zagoruyko, Nikos Komodakis 2016 (http://arxiv.org/pdf/1605.07146v1.pdf)
 
-    Depth = 8n + 2
+    Depth = 6n + 2
     '''
     n_filters = {0:16, 1:16*k, 2:32*k, 3:64*k, 4:96*k}
 
@@ -233,10 +233,11 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
         # contains the weight -> BN -> ReLU portion, steps 3 to 5
         conv_1 = batch_norm(ConvLayer(bn_pre_relu, num_filters=filters, filter_size=(3,3), stride=first_stride, nonlinearity=rectify, pad='same', W=he_norm))
 
-        dropout = DropoutLayer(conv_1, p=0.3)
+        if not np.isclose(dropout_ratio, 0.0):
+			conv_1 = DropoutLayer(conv_1, p=dropout_ratio)
 
         # contains the last weight portion, step 6
-        conv_2 = ConvLayer(dropout, num_filters=filters, filter_size=(3,3), stride=(1,1), nonlinearity=None, pad='same', W=he_norm)
+        conv_2 = ConvLayer(conv_1, num_filters=filters, filter_size=(3,3), stride=(1,1), nonlinearity=None, pad='same', W=he_norm)
 
         # add shortcut connections
         if increase_dim:
@@ -255,10 +256,10 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
         return block
 
     # Building the network
-    l_in = InputLayer(shape=(None, n_channels, PIXELS, PIXELS), input_var=input_var)
+    l_in = InputLayer(shape=(None, 3, image_size, image_size), input_var=input_var)
 
     # first layer, output is 16 x 64 x 64
-    l = batch_norm(ConvLayer(l_in, num_filters=n_filters[0], filter_size=(3,3), stride=(2,2), nonlinearity=rectify, pad='same', W=he_norm))
+    l = batch_norm(ConvLayer(l_in, num_filters=n_filters[0], filter_size=(3,3), stride=(1,1), nonlinearity=rectify, pad='same', W=he_norm))
 
     # first stack of residual blocks, output is 32 x 64 x 64
     l = residual_block(l, first=True, filters=n_filters[1])
@@ -275,10 +276,6 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
     for _ in range(1,(n+2)):
         l = residual_block(l, filters=n_filters[3])
 
-    l = residual_block(l, increase_dim=True, filters=n_filters[4])
-    for _ in range(1,(n+2)):
-        l = residual_block(l, filters=n_filters[4])
-
     bn_post_conv = BatchNormLayer(l)
     bn_post_relu = NonlinearityLayer(bn_post_conv, rectify)
 
@@ -286,7 +283,7 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
     avg_pool = GlobalPoolLayer(bn_post_relu)
 
     # fully connected layer
-    network = DenseLayer(avg_pool, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
+    network = DenseLayer(avg_pool, num_units=filter_size_all[-1], W=HeNormal(), nonlinearity=softmax)
 
     return network
 
@@ -316,8 +313,8 @@ def define_updates(output_layer, X, Y):
     # get parameters from network and set up sgd with nesterov momentum to update parameters, l_r is shared var so it can be changed
     l_r = theano.shared(np.array(LR_SCHEDULE[0], dtype=theano.config.floatX))
     params = lasagne.layers.get_all_params(output_layer, trainable=True)
-    #updates = nesterov_momentum(loss, params, learning_rate=l_r, momentum=P.MOMENTUM)
-    updates = adam(loss, params, learning_rate=l_r)
+    updates = nesterov_momentum(loss, params, learning_rate=l_r, momentum=P.MOMENTUM)
+    #updates = adam(loss, params, learning_rate=l_r)
 
     prediction_binary = T.argmax(output_train, axis=1)
     test_prediction_binary = T.argmax(output_test, axis=1)

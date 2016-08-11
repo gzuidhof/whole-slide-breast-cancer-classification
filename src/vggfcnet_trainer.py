@@ -67,11 +67,8 @@ class VGGFCNetTrainer(trainer.Trainer):
         batch_size = P.EPOCH_SAMPLES_TRAIN//P.BATCH_SIZE_TRAIN if metrics.name=='train' else P.EPOCH_SAMPLES_VALIDATION//P.BATCH_SIZE_VALIDATION
 
         for i, batch in enumerate(tqdm(batch_generator(batch_size))):
-            inputs, targets = batch
+            inputs, targets, filenames = batch
 
-            #print np.sum(targets,axis=0)
-            targets = np.array(np.argmax(targets, axis=1), dtype=np.int32) #non one-hot
-            #print targets
             err, l2_loss, acc, prediction, _ = fn(inputs, targets)
 
             metrics.append([err, l2_loss, acc])
@@ -86,13 +83,13 @@ class VGGFCNetTrainer(trainer.Trainer):
                                                 batch_size=1,
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
-                                                max_queue_size=60)
+                                                max_queue_size=20)
 
         val_gen = ContinuousParallelBatchIterator(generator_val, ordered=False,
                                                 batch_size=1,
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
-                                                max_queue_size=30)               
+                                                max_queue_size=20)               
 
         train_gen.append(X_train)
         val_gen.append(X_val)
@@ -112,7 +109,8 @@ class VGGFCNetTrainer(trainer.Trainer):
 
 
 if __name__ == "__main__":
-    train_generator, validation_generator = patch_sampling.prepare_sampler()
+    #train_generator, validation_generator = patch_sampling.prepare_sampler()
+    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=True)
 
     X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN//P.BATCH_SIZE_TRAIN)*P.N_EPOCHS
     X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION//P.BATCH_SIZE_VALIDATION)*P.N_EPOCHS

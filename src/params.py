@@ -68,6 +68,11 @@ class Params():
         self.EPOCH_SAMPLES_TRAIN = cf.getint('updates', 'epoch_samples_train')
         self.EPOCH_SAMPLES_VALIDATION = cf.getint('updates', 'epoch_samples_validation')
 
+        self.MILESTONE_TOLLERANCE = cf.getint('updates', 'milestone_tollerance')
+        self.MILESTONE_INC_FACTOR = cf.getfloat('updates', 'milestone_inc_factor')
+        self.MILESTONE_ACC_EPSILON = cf.getfloat('updates', 'milestone_acc_epsilon')
+        self.LR_DECAY = cf.getfloat('updates', 'lr_decay')	
+
         # Normalization
         self.ZERO_CENTER = cf.getboolean('normalization', 'zero_center')
         if self.CHANNELS == 0:

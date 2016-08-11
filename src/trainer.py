@@ -12,6 +12,7 @@ import util
 from logger import initialize_logger
 from params import params as P
 import pandas as pd
+from math import floor
 
 class Trainer(object):
 
@@ -26,6 +27,14 @@ class Trainer(object):
         self.train_metrics = metrics.Metrics('train', metric_names, P.N_CLASSES)
         self.val_metrics = metrics.Metrics('validation', metric_names, P.N_CLASSES)
         self.epoch = -1
+
+        self.best_epoch = 0
+        self.milestone_epoch = 0
+        self.best_accuracy = 0
+        self.current_accuracy = 0.
+        self.best_train_accuracy = 0.
+        self.milestone_tollerance = P.MILESTONE_TOLLERANCE
+        self.milestone_inc_factor = P.MILESTONE_INC_FACTOR
 
     def setup_folders(self):
         self.model_folder = os.path.join('../models',self.model_name)
@@ -73,11 +82,29 @@ class Trainer(object):
 
         labels, train_values = self.train_metrics.batch_done()
         labels, val_values = self.val_metrics.batch_done()
+        acc_index = labels.index('Accuracy')
+        self.current_accuracy = val_values[acc_index]
 
         #Print the metrics for this epoch
         for name, train_metric, val_metric in zip(labels, train_values, val_values):
             name = name.rjust(20," ") #Pad the name until 20 characters long
             logging.info("{}:\t {:.6f}\t{:.6f}".format(name,train_metric,val_metric))
+
+        if ((train_values[acc_index] - self.best_train_accuracy) >= P.MILESTONE_ACC_EPSILON or (val_values[acc_index] - self.best_accuracy) >= 0.0):
+            self.best_train_accuracy = train_values[acc_index]
+            self.milestone_epoch = self.epoch
+        
+        		
+        if (self.epoch - self.milestone_epoch) >= self.milestone_tollerance:		
+            self.milestone_epoch = self.epoch
+            self.milestone_tollerance = self.milestone_tollerance * P.MILESTONE_INC_FACTOR
+            self.l_r.set_value(np.float32(self.l_r.get_value()*P.LR_DECAY))
+            logging.info("Learning is decreasing")
+        else:
+            logging.info("Learning rate will be kept at its current value for at least the next {} epochs".format(
+            floor(self.milestone_tollerance + self.milestone_epoch - self.epoch)))
+
+
 
         #Make plots for the metrics
         self.plot_and_save_metrics()

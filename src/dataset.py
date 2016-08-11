@@ -11,12 +11,10 @@ label_names = {
 	2: 'IDC'
 }
 
-
-
 def train_filenames(shuffle=True):
-	benign = sorted(glob(os.path.join(P.DATA_FOLDER, 'Benign_Train','*.tif')))
-	dcis = sorted(glob(os.path.join(P.DATA_FOLDER, 'DCIS_Train','*.tif')))
-	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'IDC_train','*.tif')))
+	benign = sorted(glob(os.path.join(P.DATA_FOLDER, 'Originals/Train/Label1','*.tif')))
+	dcis = sorted(glob(os.path.join(P.DATA_FOLDER, 'Originals/Train/Label2','*.tif')))
+	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'Originals/Train/Label3','*.tif')))
 
 	if shuffle:
 		 map(np.random.shuffle, [benign, dcis, idc])
@@ -24,9 +22,9 @@ def train_filenames(shuffle=True):
 	return benign, dcis, idc
 
 def validation_filenames(shuffle=True):
-	benign = sorted(glob(os.path.join(P.DATA_FOLDER, 'Benign_Validation','*.tif')))
-	dcis = sorted(glob(os.path.join(P.DATA_FOLDER, 'DCIS_Validation','*.tif')))
-	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'IDC_validation','*.tif')))
+	benign = sorted(glob(os.path.join(P.DATA_FOLDER, 'Originals/Validation/Label1','*.tif')))
+	dcis = sorted(glob(os.path.join(P.DATA_FOLDER, 'Originals/Validation/Label2','*.tif')))
+	idc = sorted(glob(os.path.join(P.DATA_FOLDER, 'Originals/Validation/Label3','*.tif')))
 
 	if shuffle:
 		 map(np.random.shuffle, [benign, dcis, idc])
@@ -34,7 +32,7 @@ def validation_filenames(shuffle=True):
 	return benign, dcis, idc
 
 def mask_folder():
-	path = os.path.join(P.DATA_FOLDER, 'AllMasksMerged')
+	path = os.path.join(P.DATA_FOLDER, 'Masks/MasksAll3class')
 	return path
 
 def per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, num_each_class):
