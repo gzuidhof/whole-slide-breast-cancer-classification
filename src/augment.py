@@ -115,9 +115,6 @@ def hsv_augment(image, h, s, v, clip=True):
     image = skimage.color.hsv2rgb(image)
     image = image.transpose(2,0,1)
 
-    
-
-
     return image
 
     
