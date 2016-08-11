@@ -22,10 +22,12 @@ class WSIMask(object):
         img = r.open(self.filename)
         dims = img.getLevelDimensions(self.data_level)
         bd = self.border_distance
+
         image = img.getUCharPatch(bd, bd, dims[0]-bd, dims[1]-bd, self.data_level)
 
         image = image.transpose(2,0,1) #From 0,1,c to c,0,1
         image = image[0] #Take the first channel, the only channel
+
         img.close()
 
         # Non-black pixel indices
@@ -34,9 +36,11 @@ class WSIMask(object):
         x0, y0 = coords.min(axis=0)
         x1, y1 = coords.max(axis=0) + 1
 
-        # Crop image
+        # Crop image to content (no point in storing edge 0s)
         self.image = image[x0:x1, y0:y1]
-        self.offset = (bd+x0, bd+y0)
+
+        self.offset = (x0, y0)
+        self.volume = len(coords)
 
         self.image = self.image.astype(np.int8)
 

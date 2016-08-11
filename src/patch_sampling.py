@@ -19,6 +19,13 @@ import dataset
 import augment
 
 from params import params as P
+import gzip
+import cPickle as pickle
+import sys
+sys.path.append('../src/sampler')
+
+import time
+from wsi_random_patch_sampler import WSIRandomPatchSampler
 
 nr_classes=3
 labels_dict = {q:q+1 for q in range(nr_classes)}
@@ -86,6 +93,7 @@ def prepare_lasagne_patch(random_train_items, msk_src, multiprocess=True, proces
 #Generates a batch of given size by calling supplied generator
 def gen(batch_size, batch_generator_lasagne, deterministic=False):
     batch = batch_generator_lasagne.get_batch(batch_size)
+
 
     images = batch[0].values()[0]
 
@@ -206,3 +214,48 @@ def prepare_sampler():
     train_generator = partial(gen, batch_generator_lasagne=batch_generator_lasagne_train)
         
     return train_generator, validation_generator
+
+
+def custom_generator(batch_size, wsi_random_patch_sampler, deterministic=False):
+    images, labels, filenames = wsi_random_patch_sampler.sample_n_balanced(batch_size)
+    images = util.normalize_image(images)
+
+    if P.AUGMENT and not deterministic:
+        images = augment.augment(images)
+
+    if P.ZERO_CENTER:
+        util.zero_center(images, P.MEAN_PIXEL)
+    
+    # 0-index the labels
+    labels -= 1
+
+    return images.astype(np.float32), labels.astype(np.int32), filenames
+
+def prepare_custom_sampler(mini_subset=False):
+    s = time.time()
+
+    train_filename = '/mnt/diskB/guido/samplers_train.pkl.gz'
+    val_filename = '/mnt/diskB/guido/samplers_validation.pkl.gz'
+
+    if mini_subset:
+        train_filename = train_filename.replace('.pkl','_mini.pkl')
+        val_filename = val_filename.replace('.pkl','_mini.pkl')
+
+    print "Loading train samplers"
+    with gzip.open(train_filename,'rb') as f:
+        samplers_train = pickle.load(f)
+
+    print "Loading validation samplers"
+    with gzip.open(val_filename,'rb') as f:
+        samplers_val = pickle.load(f)
+
+    print "Loading samplers took {} seconds.".format(time.time() - s)
+
+    train_sampler = WSIRandomPatchSampler(samplers_train, labels=[1,2,3])
+    val_sampler = WSIRandomPatchSampler(samplers_val, labels=[1,2,3])
+
+    train_generator = partial(custom_generator, wsi_random_patch_sampler=train_sampler)
+    val_generator = partial(custom_generator, wsi_random_patch_sampler=val_sampler)#, deterministic=True)
+
+    return train_generator, val_generator
+        
