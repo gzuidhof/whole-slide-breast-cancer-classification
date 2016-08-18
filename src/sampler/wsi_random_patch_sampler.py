@@ -33,7 +33,7 @@ class WSIRandomPatchSampler(object):
             self.per_label_weight_list[l] = map(lambda x: x/m, self.per_label_weight_list[l])
 
             # At least one sampler (=image) per label
-            assert len(self.per_label_sampler_list[l] > 0)
+            assert len(self.per_label_sampler_list[l]) > 0
 
     def sample_label(self, label):
         # Select a random file

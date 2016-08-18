@@ -40,6 +40,7 @@ class Params():
         self.FILENAMES_VALIDATION = cf.get('dataset','filenames_validation')
         self.DATA_FOLDER = cf.get('dataset','data_folder')
         self.DATA_LEVEL = cf.getint('dataset', 'data_level')
+        self.SAMPLER_FOLDER = cf.get('dataset', 'sampler_folder')
 
 
         # Network
@@ -115,7 +116,6 @@ class Params():
     def write_to_file(self, filepath):
         with open(filepath, 'w') as f:
             self.CONFIG.write(f)
-
 
 
 CONFIG_FOLDER = '../config/'

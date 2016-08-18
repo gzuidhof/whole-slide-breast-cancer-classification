@@ -18,7 +18,7 @@ def test_in_order():
         batches.append(batch)
 
     # Batches are delivered in an ordered manner
-    assert(batches == range(10))
+    assert batches == range(10)
 
 def test_chunking():
 
@@ -32,7 +32,7 @@ def test_chunking():
         batches.append(batch)
 
     # Batches are sized as expected, residu is in last batch
-    assert(batches == [[0,1],[2,3],[4]])
+    assert batches == [[0,1],[2,3],[4]]
 
 
 

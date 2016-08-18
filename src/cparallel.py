@@ -120,11 +120,11 @@ def _produce_helper(id, generator, jobs, result_queue, last_completed_job, order
 	while not exit.is_set():
 		job_index, task = jobs.get()
 
-		try:
-			result = generator(task)
-		except:
-			print "Producer failed, skipping"
-			result = None
+		#try: uncomment to allow for failing generator
+		result = generator(task)
+		#except:
+			#print "Producer failed, skipping"
+			#result = None
 
 		# Put result onto the 'done'-queue
 		while not exit.is_set():

@@ -3,7 +3,23 @@ import multiresolutionimageinterface as mir
 
 class WSIMask(object):
 
+    # Contains a compact, serializable representation of the mask of a WSI.
+    # Optionally a mask image can be supplied when creating such an object (if you already have 
+    # it in memory)
+
+
+
     def __init__(self, filename, labels=[], mask_image=None, border_distance=0, data_level=0):
+        """
+            Arguments:
+            
+            filename: str, path to mask WSI
+            labels: list of int, labels to be sampled from this image
+            border_distance: distance to keep from the border (center of image has to be this far 
+                from the border), generally half your patch size.
+            data_level: data level to sample mask from
+
+        """
         self.filename = filename
         self.image = mask_image
 
@@ -54,20 +70,23 @@ class WSIMask(object):
             self.labels = np.unique(image)[1:]
 
     def generate_position(self, label=None):
+        """
+          Generate a position to sample from (top-left corner), optionally with given label.
+        """
         tries = 0
 
-        while tries < 3000:
+        while tries < 2000:
         
             x = np.random.randint(self.image.shape[0])
             y = np.random.randint(self.image.shape[1])
 
-            if (label is None and self.image[x,y] in self.labels) or self.image[x,y] in self.labels:
+            if (label is None and self.image[x,y] in self.labels) or self.image[x,y] == label:
                 # NOTE THAT X AND Y ARE REVERSED, sampling with MIR has different ordering of images!!!
                 return y + self.offset[1], x + self.offset[0]
             
             tries += 1
 
-        raise Exception("Failed to extract patch after 3000 tries")
+        raise Exception("Failed to extract patch after 2000 tries")
 
 
 

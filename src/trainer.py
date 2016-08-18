@@ -90,11 +90,16 @@ class Trainer(object):
             name = name.rjust(20," ") #Pad the name until 20 characters long
             logging.info("{}:\t {:.6f}\t{:.6f}".format(name,train_metric,val_metric))
 
+        print "train_val, best", train_values[acc_index], self.best_train_accuracy
+        print "val_val, best", val_values[acc_index], self.best_accuracy
+
+        print self.milestone_epoch, self.epoch
+
+
         if ((train_values[acc_index] - self.best_train_accuracy) >= P.MILESTONE_ACC_EPSILON or (val_values[acc_index] - self.best_accuracy) >= 0.0):
             self.best_train_accuracy = train_values[acc_index]
             self.milestone_epoch = self.epoch
         
-        		
         if (self.epoch - self.milestone_epoch) >= self.milestone_tollerance:		
             self.milestone_epoch = self.epoch
             self.milestone_tollerance = self.milestone_tollerance * P.MILESTONE_INC_FACTOR
@@ -104,6 +109,8 @@ class Trainer(object):
             logging.info("Learning rate will be kept at its current value for at least the next {} epochs".format(
             floor(self.milestone_tollerance + self.milestone_epoch - self.epoch)))
 
+        if val_values[acc_index] > self.best_accuracy:
+            self.best_accuracy = val_values[acc_index]
 
 
         #Make plots for the metrics

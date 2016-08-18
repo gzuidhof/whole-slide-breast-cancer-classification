@@ -203,6 +203,20 @@ def ResNet_BottleNeck_FullPreActivation(input_var=None, n=18):
 
 # ========================================================================================================================
 
+def ResNet_Stacked(output_of_network):
+    l = output_of_network
+
+    l = batch_norm(ConvLayer(l, num_filters=128, filter_size=(3,3), nonlinearity=rectify, W=HeNormal()))
+    l = MaxPool2DLayer(l,pool_size=2)
+    l = batch_norm(ConvLayer(l, num_filters=192, filter_size=(3,3), nonlinearity=rectify, W=HeNormal()))
+
+    l = GlobalPoolLayer(l)
+
+    l = DenseLayer(l, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
+
+    return l
+
+
 def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
     '''
     Adapted from https://github.com/Lasagne/Recipes/tree/master/papers/deep_residual_learning.
@@ -249,7 +263,6 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
             # projection shortcut, as option B in paper
             projection = ConvLayer(l, num_filters=filters, filter_size=(1,1), stride=(1,1), nonlinearity=None, pad='same', b=None)
             block = ElemwiseSumLayer([conv_2, projection])
-
         else:
             block = ElemwiseSumLayer([conv_2, l])
 
@@ -283,7 +296,7 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
     avg_pool = GlobalPoolLayer(bn_post_relu)
 
     # fully connected layer
-    network = DenseLayer(avg_pool, num_units=filter_size_all[-1], W=HeNormal(), nonlinearity=softmax)
+    network = DenseLayer(avg_pool, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
 
     return network
 

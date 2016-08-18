@@ -65,8 +65,6 @@ def augment(images):
             if n_rot_90 > 0:
                 image = np.rot90(image.transpose(1,2,0), n_rot_90).transpose(2,0,1)
         
-        
-
         images[i] = image
 
     images = crop(images, P.INPUT_SIZE)

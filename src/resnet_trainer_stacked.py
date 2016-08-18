@@ -20,6 +20,7 @@ if __name__ == "__main__":
     import lasagne
     import resnet
     import patch_sampling
+    from resnet import LR_SCHEDULE
     from dataset import label_name
 
 class ResNetTrainer(trainer.Trainer):
@@ -31,8 +32,29 @@ class ResNetTrainer(trainer.Trainer):
         target_var = T.ivector('targets')
 
         logging.info("Defining network")
-        net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
-        #net=resnet.ResNet_FullPreActivation(input_var, P.DEPTH)
+        #net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
+        net=resnet.ResNet_FullPreActivation(input_var, P.DEPTH)
+        all_layers = lasagne.layers.get_all_layers(net)
+
+        print "Loading model"
+        model_save_file = '../models/1470945732_resnet/1470945732_resnet_epoch448.npz'
+        with np.load(model_save_file) as f:
+        	param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+        lasagne.layers.set_all_param_values(net, param_values)
+
+
+        # New output layer
+        net = all_layers[-3] #lasagne.layers.get_output_shape(all_layers[-3])
+
+        for layer in lasagne.layers.get_all_layers(net):
+            #if layer is not output_layer:
+            for param in layer.params:
+                layer.params[param].discard('trainable')
+
+        net = resnet.ResNet_Stacked(net)
+
+        #quit()
+
         self.network = net
         train_fn, val_fn, l_r = resnet.define_updates(self.network, input_var, target_var)
 
@@ -48,7 +70,7 @@ class ResNetTrainer(trainer.Trainer):
         im[:,:,:,2] += P.MEAN_PIXEL[2]
 
         f, axarr = plt.subplots(4,4,figsize=(12,12))
-        for i in range(16):
+        for i in range(min(16, len(images))):
             x = i%4
             y = i/4
             axarr[y,x].imshow(im[i])
@@ -108,13 +130,17 @@ class ResNetTrainer(trainer.Trainer):
         for epoch in range(P.N_EPOCHS):
             self.pre_epoch()
 
+            #if epoch in LR_SCHEDULE:
+            #    logging.info("Setting learning rate to {}".format(LR_SCHEDULE[epoch]))
+            #    self.l_r.set_value(LR_SCHEDULE[epoch])
+
             self.do_batches(self.train_fn, train_gen, self.train_metrics)
             self.do_batches(self.val_fn, val_gen, self.val_metrics)
             self.post_epoch()
 
 if __name__ == "__main__":
     train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=False)
-
+    #train_generator, validation_generator = 1,2
     X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN)*P.N_EPOCHS
     X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION)*P.N_EPOCHS
     

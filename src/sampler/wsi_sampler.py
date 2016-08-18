@@ -24,9 +24,9 @@ class WSISampler(object):
 
         self.cache = []
         self.cache_size = cache_size
+        self.last_asked_label = None
 
-
-        if data_level != mask.data_level:
+        if data_level != mask.data_level: # This is not supported (it is certainly possible though)
             print "Non-matching data level for mask and sample ({})!".format(filename)
 
         assert data_level > -1
@@ -34,9 +34,16 @@ class WSISampler(object):
         assert cache_size > 0
         
     def sample(self, label=None):
+        """
+            Sample a patch (optionally with given label)
+        """
 
         # Time to fill the cache
-        if len(self.cache) == 0:
+        if len(self.cache) == 0 or self.last_asked_label != label:
+
+            self.cache = []
+            self.last_asked_label = label
+
             r = mir.MultiResolutionImageReader()
             img = r.open(self.filename)
 
