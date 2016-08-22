@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import os
+import socket
 
 def float32(k):
     return np.cast['float32'](k)
@@ -58,6 +59,9 @@ def is_interactive():
 
 def pool_progress(pool, func, work):
     return tqdm(pool.imap(func, work), total=len(work))
+
+def get_pc_name():
+    return socket.gethostname()
 
 
     
