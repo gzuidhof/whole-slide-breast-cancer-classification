@@ -8,8 +8,6 @@ class WSIMask(object):
     # Optionally a mask image can be supplied when creating such an object (if you already have 
     # it in memory)
 
-
-
     def __init__(self, filename, labels=[], mask_image=None, border_distance=0, data_level=0):
         """
             Arguments:
