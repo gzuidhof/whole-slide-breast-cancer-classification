@@ -30,7 +30,7 @@ LR_SCHEDULE = {
 
 
 PIXELS = P.INPUT_SIZE
-imageSize = PIXELS * PIXELS
+image_size = PIXELS * PIXELS
 num_classes = P.N_CLASSES
 n_channels = P.CHANNELS
 
@@ -206,9 +206,9 @@ def ResNet_BottleNeck_FullPreActivation(input_var=None, n=18):
 def ResNet_Stacked(output_of_network):
     l = output_of_network
 
-    l = batch_norm(ConvLayer(l, num_filters=128, filter_size=(3,3), nonlinearity=rectify, W=HeNormal()))
+    l = batch_norm(ConvLayer(l, num_filters=256, filter_size=(3,3), nonlinearity=rectify, W=HeNormal()))
     l = MaxPool2DLayer(l,pool_size=2)
-    l = batch_norm(ConvLayer(l, num_filters=192, filter_size=(3,3), nonlinearity=rectify, W=HeNormal()))
+    l = batch_norm(ConvLayer(l, num_filters=256, filter_size=(3,3), nonlinearity=rectify, W=HeNormal()))
 
     l = GlobalPoolLayer(l)
 

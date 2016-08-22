@@ -1,5 +1,6 @@
 import numpy as np
 import multiresolutionimageinterface as mir
+from scipy import ndimage
 
 class WSIMask(object):
 
@@ -21,6 +22,7 @@ class WSIMask(object):
 
         """
         self.filename = filename
+        self.is_multires = '.tif' in self.filename
         self.image = mask_image
 
         self.border_distance = border_distance
@@ -33,18 +35,22 @@ class WSIMask(object):
             self.load()
 
     def load(self):
-
-        r = mir.MultiResolutionImageReader()
-        img = r.open(self.filename)
-        dims = img.getLevelDimensions(self.data_level)
         bd = self.border_distance
 
-        image = img.getUCharPatch(bd, bd, dims[0]-bd, dims[1]-bd, self.data_level)
+        if self.is_multires:
+            r = mir.MultiResolutionImageReader()
+            img = r.open(self.filename)
+            dims = img.getLevelDimensions(self.data_level)
 
-        image = image.transpose(2,0,1) #From 0,1,c to c,0,1
-        image = image[0] #Take the first channel, the only channel
+            image = img.getUCharPatch(bd, bd, dims[0]-bd, dims[1]-bd, self.data_level)
+            img.close()
 
-        img.close()
+            image = image.transpose(2,0,1) #From 0,1,c to c,0,1
+            image = image[0] #Take the first channel, the only channel
+        else:
+            image = ndimage.imread(self.filename)
+            image = image[bd:-bd, bd:-bd]
+
 
         # Non-black pixel indices
         coords = np.argwhere(image)
@@ -81,8 +87,11 @@ class WSIMask(object):
             y = np.random.randint(self.image.shape[1])
 
             if (label is None and self.image[x,y] in self.labels) or self.image[x,y] == label:
-                # NOTE THAT X AND Y ARE REVERSED, sampling with MIR has different ordering of images!!!
-                return y + self.offset[1], x + self.offset[0]
+                if self.is_multires:
+                    # NOTE THAT X AND Y ARE REVERSED, sampling with MIR has different ordering of images!!!
+                    return y + self.offset[1], x + self.offset[0]
+                else:
+                    return x + self.offset[0], y + self.offset[1]
             
             tries += 1
 

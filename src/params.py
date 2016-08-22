@@ -118,7 +118,8 @@ class Params():
             self.CONFIG.write(f)
 
 
-CONFIG_FOLDER = '../config/'
+#CONFIG_FOLDER = '../config/'
+CONFIG_FOLDER = os.path.dirname(__file__)+'/../config/'
 
 def config_files_find(args):
     config_files = []

@@ -7,7 +7,8 @@ import util
 import wsi_mask
 import wsi_sampler
 
-from multiprocessing.pool import ThreadPool as Pool
+#from multiprocessing.pool import ThreadPool as Pool
+from multiprocessing.pool import Pool
 import cPickle as pickle
 import os
 
@@ -31,6 +32,7 @@ else:
 
 print "-"*20
 print "N CLASSES:", P.N_CLASSES
+print "DATA FOLDER:", P.DATA_FOLDER
 print "-"*20
 
 #########
@@ -39,12 +41,13 @@ print "-"*20
 
 if True:
     for name in ['train', 'train_mini', 'validation', 'validation_mini']:
+    #for name in ['train_mini', 'validation_mini']:
 
         if 'train' in name:
-            files = dataset.train_filenames()
+            files = train_filenames
 
         if 'validation' in name:
-            files = validation_filenames = dataset.validation_filenames()
+            files = validation_filenames
 
 
         print "\n\nNow preparing sampler {}...".format(name)
@@ -77,6 +80,7 @@ if True:
 
         pool = Pool(6)
         samplers = list(util.pool_progress(pool, create_sampler, zip(filenames,labels))) 
+        #samplers = map(create_sampler, zip(filenames,labels))
         samplers = filter(None, samplers)
         pool.close()
         pool.join()

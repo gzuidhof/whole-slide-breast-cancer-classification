@@ -37,24 +37,33 @@ class ResNetTrainer(trainer.Trainer):
         all_layers = lasagne.layers.get_all_layers(net)
 
         print "Loading model"
-        model_save_file = '../models/1470945732_resnet/1470945732_resnet_epoch448.npz'
+        model_save_file = '../models/1470945732_resnet/1470945732_resnet_epoch478.npz'
         with np.load(model_save_file) as f:
         	param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+        
+        # Make up some weights
+        if len(param_values[-1]) == 2 and P.N_CLASSES == 3:
+
+            cl3_weight = np.zeros((1,),dtype=np.float32)
+            param_values[-1] = np.hstack((param_values[-1], cl3_weight))
+
+            cl3_weights = np.zeros((len(param_values[-2]), 1), dtype=np.float32)
+            param_values[-2] = np.hstack((param_values[-2], cl3_weights))
+
         lasagne.layers.set_all_param_values(net, param_values)
 
 
         # New output layer
         net = all_layers[-3] #lasagne.layers.get_output_shape(all_layers[-3])
 
+        # Freeze the layers
         for layer in lasagne.layers.get_all_layers(net):
-            #if layer is not output_layer:
             for param in layer.params:
                 layer.params[param].discard('trainable')
 
         net = resnet.ResNet_Stacked(net)
 
-        #quit()
-
+        print "Compiling network"
         self.network = net
         train_fn, val_fn, l_r = resnet.define_updates(self.network, input_var, target_var)
 
@@ -139,8 +148,9 @@ class ResNetTrainer(trainer.Trainer):
             self.post_epoch()
 
 if __name__ == "__main__":
-    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=False)
-    #train_generator, validation_generator = 1,2
+    # Load the samplers (which loads the masks)
+    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=True)
+
     X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN)*P.N_EPOCHS
     X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION)*P.N_EPOCHS
     
