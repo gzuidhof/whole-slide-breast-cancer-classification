@@ -10,8 +10,6 @@ class ContinuousParallelBatchIterator(object):
 	Uses a producer-consumer model to prepare batches on the CPU in different processes or threads (while you are training on the GPU).
 	Continuous version, continues between and after batches.
 	
-
-
 	Constructor arguments:
 		batch_generator: function which can be called to yield a new batch.
 		
@@ -80,7 +78,6 @@ class ContinuousParallelBatchIterator(object):
 			print "Not enough X appended to retrieve this many batches"
 			print "Returning the maximum amount instead ({})".format(n_upcoming_batches)
 			n_batches = n_upcoming_batches
-
 
 		return GeneratorLen(self.__gen_batch(n_batches), n_batches)
 
