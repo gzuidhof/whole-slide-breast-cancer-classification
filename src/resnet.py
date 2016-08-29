@@ -33,6 +33,7 @@ PIXELS = P.INPUT_SIZE
 image_size = PIXELS * PIXELS
 num_classes = P.N_CLASSES
 n_channels = P.CHANNELS
+dropout_ratio = P.DROPOUT
 
 he_norm = HeNormal(gain='relu')
 
@@ -337,3 +338,17 @@ def define_updates(output_layer, X, Y):
     valid_fn = theano.function(inputs=[X,Y], outputs=[test_loss, l2_penalty, test_acc, test_prediction_binary, output_test[:,1]])
 
     return train_fn, valid_fn, l_r
+
+def define_predict(output_layer, X, Y):
+    output = lasagne.layers.get_output(output_layer, deterministic=True)
+    loss = lasagne.objectives.categorical_crossentropy(output, Y)
+    acc = T.mean(T.eq(T.argmax(output, axis=1), Y), dtype=theano.config.floatX)
+    prediction_binary = T.argmax(output, axis=1)
+
+    prediction_fn = theano.function(inputs=[X,Y], outputs=[loss, acc, prediction_binary, output[:,1]])
+    return prediction_fn
+
+
+
+
+
