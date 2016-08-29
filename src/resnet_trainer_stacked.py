@@ -32,12 +32,12 @@ class ResNetTrainer(trainer.Trainer):
         target_var = T.ivector('targets')
 
         logging.info("Defining network")
-        #net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
-        net=resnet.ResNet_FullPreActivation(input_var, P.DEPTH)
+        net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
+        #net=resnet.ResNet_FullPreActivation(input_var, P.DEPTH)
         all_layers = lasagne.layers.get_all_layers(net)
 
         print "Loading model"
-        model_save_file = '../models/1470945732_resnet/1470945732_resnet_epoch478.npz'
+        model_save_file = '../models/wide_resnet_babak.npz'#'../models/1470945732_resnet/1470945732_resnet_epoch478.npz'
         with np.load(model_save_file) as f:
         	param_values = [f['arr_%d' % i] for i in range(len(f.files))]
         
@@ -49,8 +49,12 @@ class ResNetTrainer(trainer.Trainer):
 
             cl3_weights = np.zeros((len(param_values[-2]), 1), dtype=np.float32)
             param_values[-2] = np.hstack((param_values[-2], cl3_weights))
+        
+        #print len(param_values)
 
         lasagne.layers.set_all_param_values(net, param_values)
+
+
 
 
         # New output layer
@@ -92,7 +96,6 @@ class ResNetTrainer(trainer.Trainer):
         plt.savefig(os.path.join(self.image_folder, '{}_{}.png'.format(metrics.name,self.epoch, n)))
         plt.close()
 
-
     def do_batches(self, fn, batch_generator, metrics):
         
         #batch_size = P.EPOCH_SAMPLES_TRAIN//P.BATCH_SIZE_TRAIN if metrics.name=='train' else P.EPOCH_SAMPLES_VALIDATION//P.BATCH_SIZE_VALIDATION
@@ -121,13 +124,13 @@ class ResNetTrainer(trainer.Trainer):
                                                 batch_size=1,
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
-                                                max_queue_size=min([60, P.EPOCH_SAMPLES_TRAIN*2]))
+                                                max_queue_size=min([24, P.EPOCH_SAMPLES_TRAIN*2]))
 
         val_gen = ContinuousParallelBatchIterator(generator_val, ordered=False,
                                                 batch_size=1,
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
-                                                max_queue_size=min([40, P.EPOCH_SAMPLES_VALIDATION*2]))       
+                                                max_queue_size=min([12, P.EPOCH_SAMPLES_VALIDATION*2]))       
 
         train_gen.append(X_train)
         val_gen.append(X_val)
@@ -139,17 +142,13 @@ class ResNetTrainer(trainer.Trainer):
         for epoch in range(P.N_EPOCHS):
             self.pre_epoch()
 
-            #if epoch in LR_SCHEDULE:
-            #    logging.info("Setting learning rate to {}".format(LR_SCHEDULE[epoch]))
-            #    self.l_r.set_value(LR_SCHEDULE[epoch])
-
             self.do_batches(self.train_fn, train_gen, self.train_metrics)
             self.do_batches(self.val_fn, val_gen, self.val_metrics)
             self.post_epoch()
 
 if __name__ == "__main__":
     # Load the samplers (which loads the masks)
-    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=True)
+    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=False, override_cache_size=1)
 
     X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN)*P.N_EPOCHS
     X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION)*P.N_EPOCHS
