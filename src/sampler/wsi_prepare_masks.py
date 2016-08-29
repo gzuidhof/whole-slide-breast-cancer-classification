@@ -12,13 +12,13 @@ from multiprocessing.pool import Pool
 import cPickle as pickle
 import os
 
-PATCH_SIZE = (P.INPUT_SIZE, P.INPUT_SIZE) #(224,224)
-BORDER_DISTANCE = PATCH_SIZE[0]//2
+PATCH_SIZE = (P.INPUT_SIZE, P.INPUT_SIZE)
+BORDER_DISTANCE = max(PATCH_SIZE)//2 #TODO border distance different in x and y direction
 DATA_LEVEL = 0
 
 # Amount of samples loaded at once per file open
 # Increases speed, but also memory usage
-CACHE_SIZE = 4
+CACHE_SIZE = 6
 
 out_file_unformatted = os.path.join(P.SAMPLER_FOLDER, 'samplers_{0}_{1}x{2}_nclass_{3}.pkl.gz')
 
