@@ -6,7 +6,7 @@ import wsi_sampler
 
 class WSIRandomPatchSampler(object):
 
-    def __init__(self, wsi_samplers, labels=[1,2,3]):
+    def __init__(self, wsi_samplers, labels=[1,2,3], override_cache_size=None):
 
         assert len(labels) > 0
         assert len(wsi_samplers) > 0
@@ -17,6 +17,10 @@ class WSIRandomPatchSampler(object):
 
         # Work out which wsi_images contain which of the labels
         for wsi_sampler in wsi_samplers:
+
+            if override_cache_size is not None:
+                wsi_sampler.cache_size = override_cache_size
+
             for label in wsi_sampler.labels:
 
                 if label not in labels:
@@ -41,7 +45,6 @@ class WSIRandomPatchSampler(object):
 
         # Sample an image from it
         image = sampler.sample(label)
-
         return image, sampler.filename
 
     #Sample N images, randomly select labels uniformly
