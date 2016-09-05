@@ -29,19 +29,19 @@ def custom_generator(batch_size, wsi_random_patch_sampler, deterministic=False):
 
     if P.ZERO_CENTER:
         util.zero_center(images, P.MEAN_PIXEL)
-    
+
     # 0-index the labels
     labels -= 1
 
     return images.astype(np.float32), labels.astype(np.int32), filenames
 
-def prepare_custom_sampler(mini_subset=False, override_cache_size=None):
+def prepare_custom_sampler(mini_subset=False, override_cache_size=None, return_samplers=False):
     """
         Returns two functions, one for train and one for validation. Call it with an integer as
         argument (the amount of images you want (probably one batch)).
     """
     s = time.time()
-    
+
     file_unf = os.path.join(P.SAMPLER_FOLDER, 'samplers_{0}_{1}x{2}_nclass_{3}.pkl.gz')
     train_filename = file_unf.format('train' if not mini_subset else 'train_mini', P.PIXELS, P.PIXELS, P.N_CLASSES)
     val_filename = file_unf.format('validation' if not mini_subset else 'validation_mini', P.PIXELS, P.PIXELS, P.N_CLASSES)
@@ -63,6 +63,8 @@ def prepare_custom_sampler(mini_subset=False, override_cache_size=None):
 
     train_generator = partial(custom_generator, wsi_random_patch_sampler=train_sampler)
     val_generator = partial(custom_generator, wsi_random_patch_sampler=val_sampler, deterministic=True)
-
-    return train_generator, val_generator
-        
+    
+    if return_samplers:
+        return train_generator, val_generator, train_sampler, val_sampler
+    else:
+        return train_generator, val_generator

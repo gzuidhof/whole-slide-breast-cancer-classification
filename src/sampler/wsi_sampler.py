@@ -88,7 +88,6 @@ class WSISampler(object):
         
         del img
 
-
     def sample_full(self):
         """
             Load the full WSI image into a numpy array (c01 channel order, ready for convnets)
@@ -102,7 +101,7 @@ class WSISampler(object):
             
             image = img.getUCharPatch(0,0, self.dims[0], self.dims[1], self.data_level)
         else: 
-            image = ndimage.imread(filename)
+            image = ndimage.imread(self.filename)
         return image.transpose(2,0,1)  #From 0,1,c to c,0,1
 
         
