@@ -204,7 +204,68 @@ def ResNet_BottleNeck_FullPreActivation(input_var=None, n=18):
 
 # ========================================================================================================================
 
-def ResNet_Stacked(output_of_network):
+def ResNet_Stacked(output_of_network, n=4, k=2):
+
+    def residual_block(l, increase_dim=False, projection=True, first=False, filters=16):
+        if increase_dim:
+            first_stride = (2,2)
+        else:
+            first_stride = (1,1)
+
+        if first:
+            # hacky solution to keep layers correct
+            bn_pre_relu = l
+        else:
+            # contains the BN -> ReLU portion, steps 1 to 2
+            bn_pre_conv = BatchNormLayer(l)
+            bn_pre_relu = NonlinearityLayer(bn_pre_conv, rectify)
+
+        # contains the weight -> BN -> ReLU portion, steps 3 to 5
+        conv_1 = batch_norm(ConvLayer(bn_pre_relu, num_filters=filters, filter_size=(3,3), stride=first_stride, nonlinearity=rectify, pad='same', W=he_norm))
+
+        if not np.isclose(dropout_ratio, 0.0):
+			conv_1 = DropoutLayer(conv_1, p=dropout_ratio)
+
+        # contains the last weight portion, step 6
+        conv_2 = ConvLayer(conv_1, num_filters=filters, filter_size=(3,3), stride=(1,1), nonlinearity=None, pad='same', W=he_norm)
+
+        # add shortcut connections
+        if increase_dim:
+            # projection shortcut, as option B in paper
+            projection = ConvLayer(l, num_filters=filters, filter_size=(1,1), stride=(2,2), nonlinearity=None, pad='same', b=None)
+            block = ElemwiseSumLayer([conv_2, projection])
+
+        elif first:
+            # projection shortcut, as option B in paper
+            projection = ConvLayer(l, num_filters=filters, filter_size=(1,1), stride=(1,1), nonlinearity=None, pad='same', b=None)
+            block = ElemwiseSumLayer([conv_2, projection])
+        else:
+            block = ElemwiseSumLayer([conv_2, l])
+
+        return block
+
+
+
+    l = output_of_network
+
+    l = ConvLayer(l, num_filters = 48*k, filter_size=(1,1), stride=(1,1), nonlinearity=rectify, W=HeNormal())
+
+    l = residual_block(l, first=True, increase_dim=True, filters=k*64)
+    for _ in range(1,(n+2)):
+        l = residual_block(l, filters=k*64)
+    
+    bn_post_conv = BatchNormLayer(l)
+    bn_post_relu = NonlinearityLayer(bn_post_conv, rectify)
+
+    # average pooling
+    avg_pool = GlobalPoolLayer(bn_post_relu)
+
+    # fully connected layer
+    network = DenseLayer(avg_pool, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
+
+    return network
+
+def ResNet_Stacked_Old(output_of_network):
     l = output_of_network
 
     l = batch_norm(ConvLayer(l, num_filters=256, filter_size=(3,3), nonlinearity=rectify, W=HeNormal()))
