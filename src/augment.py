@@ -4,6 +4,7 @@ import numpy as np
 import skimage
 
 try:
+    a = 1/0
     import cv2
     CV2_AVAILABLE=True
     print "OpenCV 2 available, using that for augmentation"
@@ -67,7 +68,7 @@ def augment(images):
         
         images[i] = image
 
-    images = crop(images, P.INPUT_SIZE)
+    #images = crop(images, P.INPUT_SIZE)
     return images
 
 def crop(images, desired_size):

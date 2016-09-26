@@ -37,7 +37,11 @@ class ResNetTrainer(trainer.Trainer):
         all_layers = lasagne.layers.get_all_layers(net)
 
         print "Loading model"
-        model_save_file = '../models/wide_resnet_babak.npz'#'../models/1470945732_resnet/1470945732_resnet_epoch478.npz'
+        #model_save_file = '../models/wide_resnet_babak.npz'#'../models/1470945732_resnet/1470945732_resnet_epoch478.npz'
+        model_save_file = '../models/1473540491_resnet/1473540491_resnet_epoch62.npz'
+
+        logging.info("Model file "+ model_save_file)
+
         with np.load(model_save_file) as f:
         	param_values = [f['arr_%d' % i] for i in range(len(f.files))]
         
@@ -53,12 +57,16 @@ class ResNetTrainer(trainer.Trainer):
         #print len(param_values)
 
         lasagne.layers.set_all_param_values(net, param_values)
-
+        del param_values
 
 
 
         # New output layer
         net = all_layers[-3] #lasagne.layers.get_output_shape(all_layers[-3])
+
+
+        #for x in all_layers[:-3]:
+        #    print x.output_shape
 
         # Freeze the layers
         for layer in lasagne.layers.get_all_layers(net):
@@ -124,7 +132,7 @@ class ResNetTrainer(trainer.Trainer):
                                                 batch_size=1,
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
-                                                max_queue_size=min([24, P.EPOCH_SAMPLES_TRAIN*2]))
+                                                max_queue_size=min([16, P.EPOCH_SAMPLES_TRAIN*2]))
 
         val_gen = ContinuousParallelBatchIterator(generator_val, ordered=False,
                                                 batch_size=1,
@@ -148,10 +156,11 @@ class ResNetTrainer(trainer.Trainer):
 
 if __name__ == "__main__":
     # Load the samplers (which loads the masks)
-    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=False, override_cache_size=1)
+    
 
     X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN)*P.N_EPOCHS
     X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION)*P.N_EPOCHS
     
     trainer = ResNetTrainer()
+    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=False, override_cache_size=1)
     trainer.train(train_generator, X_train, validation_generator, X_val)

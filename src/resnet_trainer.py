@@ -96,7 +96,7 @@ class ResNetTrainer(trainer.Trainer):
                                                 batch_size=1,
                                                 multiprocess=P.MULTIPROCESS_LOAD_AUGMENTATION,
                                                 n_producers=P.N_WORKERS_LOAD_AUGMENTATION,
-                                                max_queue_size=min([40, P.EPOCH_SAMPLES_VALIDATION*2]))       
+                                                max_queue_size=min([30, P.EPOCH_SAMPLES_VALIDATION*2]))       
 
         train_gen.append(X_train)
         val_gen.append(X_val)
@@ -113,7 +113,7 @@ class ResNetTrainer(trainer.Trainer):
             self.post_epoch()
 
 if __name__ == "__main__":
-    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=False)
+    train_generator, validation_generator = patch_sampling.prepare_custom_sampler(mini_subset=False)#, override_cache_size=1)
 
     X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN)*P.N_EPOCHS
     X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION)*P.N_EPOCHS

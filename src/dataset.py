@@ -51,6 +51,8 @@ def mask_folder():
 	elif P.N_CLASSES == 3:
 		if 'Aug17' in P.DATA_FOLDER:
 			path = os.path.join(P.DATA_FOLDER, 'Masks/MasksAll')
+		else:
+			path = os.path.join(P.DATA_FOLDER, 'Masks/MasksAll3Class')
 	return path
 
 def per_class_filelist(Benign_file_list, DCIS_file_list, IDC_file_list, msk_fls_All, msk_src, num_each_class):

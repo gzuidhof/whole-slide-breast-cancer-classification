@@ -248,8 +248,7 @@ def ResNet_Stacked(output_of_network, n=4, k=2):
 
     l = output_of_network
 
-    l = ConvLayer(l, num_filters = 48*k, filter_size=(1,1), stride=(1,1), nonlinearity=rectify, W=HeNormal())
-
+    l = ConvLayer(l, num_filters = 48*k, filter_size=(1,1), stride=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'))
     l = residual_block(l, first=True, increase_dim=True, filters=k*64)
     for _ in range(1,(n+2)):
         l = residual_block(l, filters=k*64)
@@ -258,10 +257,14 @@ def ResNet_Stacked(output_of_network, n=4, k=2):
     bn_post_relu = NonlinearityLayer(bn_post_conv, rectify)
 
     # average pooling
-    avg_pool = GlobalPoolLayer(bn_post_relu)
+    #avg_pool = GlobalPoolLayer(bn_post_relu)
+    print bn_post_relu.output_shape
 
+    l = batch_norm(ConvLayer(bn_post_relu, num_filters=128, filter_size=(96,96), nonlinearity=rectify, W=HeNormal(gain='relu')))
+    l = batch_norm(ConvLayer(bn_post_relu, num_filters=3, filter_size=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu')))
+    l = GlobalPoolLayer(l)
     # fully connected layer
-    network = DenseLayer(avg_pool, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
+    network = DenseLayer(l, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
 
     return network
 
@@ -331,7 +334,9 @@ def ResNet_FullPre_Wide(input_var=None, n=6, k=4):
         return block
 
     # Building the network
-    l_in = InputLayer(shape=(None, 3, image_size, image_size), input_var=input_var)
+    l_in = InputLayer(shape=(None, P.CHANNELS, PIXELS, PIXELS), input_var=input_var)
+
+    #print "IMAGE SIZE", image_size
 
     # first layer, output is 16 x 64 x 64
     l = batch_norm(ConvLayer(l_in, num_filters=n_filters[0], filter_size=(3,3), stride=(1,1), nonlinearity=rectify, pad='same', W=he_norm))
@@ -400,13 +405,13 @@ def define_updates(output_layer, X, Y):
 
     return train_fn, valid_fn, l_r
 
-def define_predict(output_layer, X, Y):
+def define_predict(output_layer, X):
     output = lasagne.layers.get_output(output_layer, deterministic=True)
-    loss = lasagne.objectives.categorical_crossentropy(output, Y)
-    acc = T.mean(T.eq(T.argmax(output, axis=1), Y), dtype=theano.config.floatX)
+    #loss = lasagne.objectives.categorical_crossentropy(output, Y)
+    #acc = T.mean(T.eq(T.argmax(output, axis=1), Y), dtype=theano.config.floatX)
     prediction_binary = T.argmax(output, axis=1)
 
-    prediction_fn = theano.function(inputs=[X,Y], outputs=[loss, acc, prediction_binary, output[:,1]])
+    prediction_fn = theano.function(inputs=[X], outputs=[prediction_binary, output])
     return prediction_fn
 
 
