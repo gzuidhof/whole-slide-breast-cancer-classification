@@ -16,11 +16,12 @@ BACKGROUND_DATA_LEVEL = 3
 
 SUPER_PATCH_SIZE=2048
 PATCH_SIZE = 768
-STRIDE = 128
+STRIDE = 256
 DATA_LEVEL = 1
-BATCH_SIZE = 48
+BATCH_SIZE = 48 if len(sys.argv)==1 else int(sys.argv[1])
 
-WSI_PATH = '/mnt/rdstorage1/Userdata/Guido/slides/T13-37-I9-1.mrxs'#/mnt/rdstorage1/Userdata/Guido/slides/T10-11269-I-7-1.mrxs'
+WSI_FOLDER = '/mnt/rdstorage1/Userdata/Guido/slides/'
+OUT_FOLDER = '../../wsi_predictions/'
 
 from params import params as P
 import resnet
@@ -28,6 +29,7 @@ from wsi_parallel_sampler import WSIParallelSampler
 import itertools
 import util
 from tqdm import tqdm
+from glob import glob
 import pickle
 
 
@@ -73,11 +75,11 @@ def generate_patch_positions(xlim, ylim, patch_size, stride, data_level):
     return positions, prediction_shape
 
 
-def determine_background(image_dims, data_level):
+def determine_background(wsi_path, image_dims, data_level):
     """
         Determine which pixels are fully background at a certain data level.
     """
-    sampler = WSIParallelSampler(WSI_PATH, data_level=data_level, multiprocess=False, n_producers=1)
+    sampler = WSIParallelSampler(wsi_path, data_level=data_level, multiprocess=False, n_producers=1)
     positions = [(0, 0, image_dims[0]//2**data_level, image_dims[1]//2**data_level)]
     sampler.set_todo_positions(positions)
 
@@ -233,22 +235,19 @@ def overlapping_patch_generator(sampler, positions, patch_size_super, data_level
             
     return gen()
 
-
-
-if __name__ == "__main__":
-
-    sampler = WSIParallelSampler(WSI_PATH, data_level=0, multiprocess=False, n_producers=1)
+def predict_slide(wsi_path, slide_filename):
+    sampler = WSIParallelSampler(wsi_path, data_level=0, multiprocess=False, n_producers=1)
     image_dims = sampler.get_image_dimensions()
     del sampler
     
     print "Image dimensions:", image_dims
     print "Determining lowres background mask"
-    lowres_bg_mask = determine_background(image_dims, BACKGROUND_DATA_LEVEL)
+    lowres_bg_mask = determine_background(wsi_path, image_dims, BACKGROUND_DATA_LEVEL)
 
 
     print "Loading model"
     predict_fn = load_model(MODEL_PATH)
-    sampler = WSIParallelSampler(WSI_PATH, data_level=DATA_LEVEL, multiprocess=True, n_producers=8, max_queue_size=16)
+    sampler = WSIParallelSampler(wsi_path, data_level=DATA_LEVEL, multiprocess=True, n_producers=8, max_queue_size=16)
 
     print "Generating positions to predict."
     positions, prediction_shape = generate_patch_positions(image_dims[0], image_dims[1], PATCH_SIZE, STRIDE, DATA_LEVEL)
@@ -302,9 +301,8 @@ if __name__ == "__main__":
         images_in_batch = []
         indices_in_batch = []
 
-    slide_filename = WSI_PATH.split('/')[-1].split('.')[0] + "_" + str(STRIDE)
-    save_filename = '../../wsi_predictions/' + slide_filename + '.npy'
-    plot_filename = '../../wsi_predictions/' + slide_filename + '.png'
+    save_filename = OUT_FOLDER + slide_filename + '.npy'
+    plot_filename = OUT_FOLDER + slide_filename + '.png'
 
     prediction = prediction_flat.reshape(tuple(prediction_shape)+(3,), order='F')
     np.save(save_filename, prediction)
@@ -312,3 +310,40 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     plt.imsave(plot_filename, prediction.transpose(1,0,2))
         
+
+
+
+if __name__ == "__main__":
+    all_slides = glob(WSI_FOLDER+'*.mrxs')
+
+    while True:
+
+        non_busy_slides = []
+        print "Amount of slides", len(all_slides)
+        
+
+
+        for slide_path in all_slides:
+            slide_filename = slide_path.split('/')[-1].split('.')[0] + "_STRIDE" + str(STRIDE)
+            claim_path = OUT_FOLDER+slide_filename+"_claimed.txt"
+            
+            
+            if len(glob(claim_path)) < 1:
+                non_busy_slides.append((slide_path, slide_filename, claim_path))
+
+
+        print "Amount of slides unpredicted (and not busy)", len(non_busy_slides)
+
+        if len(non_busy_slides) == 0:
+            break
+
+       
+        current_slide_path, current_slide_filename, claim_file= non_busy_slides[0]
+        
+        open(claim_file, 'a').close()
+
+        print "Now predicting", current_slide_path
+        predict_slide(current_slide_path, current_slide_filename)
+
+
+    
