@@ -68,3 +68,6 @@ images/
 src/.vscode/launch.json
 models/
 wsi_predictions/
+*.aux
+tex/article.aux
+*.bbl
