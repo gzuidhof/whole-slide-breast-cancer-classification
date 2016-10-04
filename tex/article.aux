@@ -1,0 +1,53 @@
+\relax 
+\citation{cancerstats}
+\citation{bcstats}
+\citation{resnet}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {I-A}}Patch-based classification}{1}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Dense prediction}{1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {II-A}}Architectures}{1}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {II-A}1}Wide Residual Networks}{1}}
+\citation{wideresnet}
+\citation{elastransforms}
+\citation{unet}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Overview of the proposed system for labeling whole-slide images. (a) Original WSI of breast tissue. (b) Resulting probability map of applying the CNN in a patch-based fashion. (c) Output of the system; a single label for the whole-slide image (either benign, DCIS or IDC).}}{2}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {II-A}2}VGG-16}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {II-B}}Preprocessing}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {II-C}}Learning rate decay}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {II-D}}Data augmentation}{2}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Best epoch patch-level accuracy of 224x224 networks}}{2}}
+\newlabel{table_results_224}{{I}{2}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {II-D}1}Flips}{2}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {II-D}2}Rotations}{2}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {II-D}3}HSV jittering}{2}}
+\bibstyle{IEEEtran}
+\bibdata{IEEEabrv,bib/ref}
+\bibcite{cancerstats}{1}
+\bibcite{bcstats}{2}
+\bibcite{resnet}{3}
+\bibcite{wideresnet}{4}
+\bibcite{elastransforms}{5}
+\bibcite{unet}{6}
+\newlabel{fig_resnet}{{2a}{3}}
+\newlabel{sub@fig_resnet}{{(a)}{a}}
+\newlabel{fig_resnet_block}{{2b}{3}}
+\newlabel{sub@fig_resnet_block}{{(b)}{b}}
+\newlabel{fig_vgg}{{2c}{3}}
+\newlabel{sub@fig_vgg}{{(c)}{c}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Architectures used for 224x224 patch classification. The 1x1 convolution layer in the resnet blocks is only present in the blocks where the input is downsampled, which is every first block with a higher amount of filters in the Wide ResNet architecture (figure 2a\hbox {}).}}{3}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {Wide Residual Network architecture. \newline \emph {RB} stands for ResNet Block.}}}{3}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {Architecture of the resnet blocks. \newline The $\otimes $ node indicates an elementwise sum.}}}{3}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(c)}{\ignorespaces {VGG-16 model architecture. \newline Dropout with probability of 0.5 was used in the fully connected layers.}}}{3}}
+\newlabel{fig_architectures}{{2}{3}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Best epoch patch-level accuracy of 768x768 stacked networks}}{3}}
+\newlabel{table_results_stacked}{{II}{3}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Whole-slide image labeling}{3}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Results}{3}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion}{3}}
+\@writefile{toc}{\contentsline {section}{References}{3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Architecture of the stacked network. The weights of the components with the dotted outlines are taken from the previously trained 224x224 patch model, and are no longer updated (these are frozen).}}{4}}
+\newlabel{fig_stacked}{{3}{4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Performance of networks trained on the two class problem of benign versus cancerous patches. The dashed line shows the performance on the images from the train set it was shown that epoch.}}{4}}
+\newlabel{fig_2class}{{4}{4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Performance of networks trained on all three classes. The dashed line shows the performance on the images from the train set it was shown that epoch. The validation accuracy of the wide resnet is especially noisy.}}{4}}
+\newlabel{fig_3class}{{5}{4}}

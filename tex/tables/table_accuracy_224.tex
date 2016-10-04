@@ -1,0 +1,26 @@
+
+\begin{table}[!t]
+%% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.1}
+% if using array.sty, it might be a good idea to tweak the value of
+% \extrarowheight as needed to properly center the text within the cells
+\caption{Best epoch patch-level accuracy of 224x224 networks}
+\label{table_results_224}
+\centering
+%% Some packages, such as MDW tools, offer better commands for making tables
+%% than the plain LaTeX2e tabular which is used here.
+\begin{tabular}{|llr|}
+\hline
+\textsc{Labels}&\textsc{Architecture}&\textsc{Accuracy}\\
+\hline
+\textit{Benign, Cancer}&&\\
+&VGG-16&  0.9237\\
+&WRN-4-2& 0.9241\\
+\hline
+\textit{Benign, DCIS, IDC}&&\\
+&VGG-16& 0.8245\\
+&WRN-4-2& 0.7995\\
+\hline
+\end{tabular}
+\end{table}
+
