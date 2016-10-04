@@ -588,10 +588,17 @@ The images are randomly rotated 0, 90, 180, or 270 degrees with equal probabilit
 \subsubsection{HSV jittering}
 HSV is a colorspace that represents a color image in three channels; a \emph{hue} (color), \emph{saturation} (vibrance) and a \emph{value} (brightness) channel. There exists a large variability in the staining of the slides, which shows itself mostly in the hue and saturation channel. We randomly jitter the hue and saturation of an image with a random value between -0.075 and 0.075. The values of all pixels are then clipped between 0 and 1.
 
+\begin{figure}[!t]
+\centering{}
+\includegraphics[width=2.5in]{augment_examples}
+\caption{Examples of augmentations applied to patches of 224 by 224 pixels. (a) The original image. (b) Augmented versions of this image. Note the slight shift in hue and saturation for some of the images.}
+\label{fig_augment}
+\end{figure}
+
+
 \medskip
 
 Another commonly used data augmentation method is also zooming. This was not used here, as the size of the nuclei plays a role in determining the class label. Elastic distortions were succesfully applied as part of the data augmentation strategy in other applications of convolutional neural networks \cite{elastransforms}, also in the medical imaging domain (cytology) \cite{unet}. The irregularity of the sizes of the nuclei, as well as the architectural features are important biomarkers that can be used to distinguish between benign and cancerous lesions. Applying these elastic distortions would likely contaminate this information, and as such, it was not used here.
-
 
 
 
