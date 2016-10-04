@@ -495,6 +495,27 @@ Convolutional neural networks, as well as other statistical machine learning met
 
 To create a classification for the whole-slide image a patch based method will be employed. A patch is a small sub-image of the whole image. By applying the classifier in a sliding window approach over the original image we can create a prediction map for the whole image.
 
+A trade-off between input size, mini-batch size and model complexity has to be made. If the input size increases, the amount of activations in the feed-forward step of training also increases. These are required for computing the gradient, and thus have to be stored in memory, leading to a larger memory footprint. The amount of images used to determine the error gradient for one update step is called the batch size. A larger batch size generally leads to a less noisy gradient as it is averaged over more data points. This does not necessarily lead to a faster convergence, or to a better local optimum, as the noise can be beneficial, but in the general sense a larger batch size is beneficial. 
+
+\subsection{Incorporating more context}
+
+As a patch is limited in size, it can only contain so much information. One could downsample a larger image to fit a patch, but fine-grained detail would be lost. To distinguish between benign and cancerous tissue, this fine detail is especially important. To tell apart DCIS from IDC, larger scale architectural features play a more important role. 
+
+One approach to incorporate both fine-grained detail as well as larger scale structural information is the use of \emph{multi-scale convolutional neural networks} \cite{multiscale_shen,buyssens2012multiscale}. With this approach an image is offered to one network at different magnifications. Often, there are multiple sub-networks for the different magnification levels. The outputs of these sub-networks is then fused, generally using one or more fully connected layers. This allows for training the system as a whole using ordinary backpropagation.
+
+In this paper we will be exploring a different method for incorporating more context, whilst keeping the same level of detail, that of \emph{stacked convolutional neural networks}.  
+
+\subsection{Stacked convolutional neural networks}
+Convolutional neural networks generally consist of a stack of different types of layers. Some types of layers retain the spatial information of the image, such as convolution layers. In these layers, different filters are convolved over the image. These learned filters are not dependent on the input size and this layer can thus be fed an image of a different size without problems. This characteristic is exploited in \emph{fully convolutional neural networks}, which are the state of the art in segmentation \cite{long2015fully}. 
+
+In such a framework the network the output segmentation size is only dependent on the input image size, it can thus be used to segment variable sized images. We will be exploiting this here as well. First, we train a network to classify patches of 224 by 224 pixels. This network will especially learn feature representations that are in the fine detail of the tissue. 
+
+Then, we strip this network of its last few layers that do not satisy this fully convolutional requirement of having spatial information present and are input size dependent. We increase the input size of the network to 768 by 768 pixels, and do a forward pass through this network. The output is a volume, a feature volume  that resembles an image with many feature maps (or color channels). 
+
+We then train another convolutional neural network using this feature volume as its input. The learned weights in the 224 by 224 input-sized network are no longer updated (i.e. they are frozen). The idea is that this stacked network has access to the learned fine detail features, and has very large receptive fields. It can thus learn to exploit both the fine detail, as well as the spatial arrangement of where specific patterns are.
+
+By training these networks in this tiered manner, the computational requirements can be kept in check, whilst enabling both a large patch size, a decent batch size while training and a complex model with large receptive fields.
+
 \begin{figure*}[!t]
 \centering
 \hspace{-0.1in}\includegraphics[width=6.5in]{system_overview}%
@@ -527,7 +548,7 @@ In this study we will apply an adaptation of this architecture, the wide residua
 The architecture is a recipe that has three main design choices, the $N$ value that determines the depth, the $k$ value that determines the width (the amount of filters) and the type of ResNet block. Here, we use $N=4$, $k=2$, which was empirically evaluated to fit a decent batch size and train fast. The ResNet block type is detailed in figure \ref{fig_resnet_block}, TODO more about this block. The resulting architecture is shown in figure \ref{fig_resnet}.
 
 \subsubsection{VGG-16}
-VGG-16 is a popular architecture because of its simplicity. It features small 3x3 convolution filters and 2x2 pooling throughout the network and has a depth of 16 layers. The architecture is detailed in figure \ref{fig_vgg}. Unlike the ResNet architecture it does not feature skip connections, also it features a stack of two dense fully connected layers at the end.
+VGG-16 is a popular architecture because of its simplicity \cite{vgg}. It features small 3x3 convolution filters and 2x2 pooling throughout the network and has a depth of 16 layers. The architecture is detailed in figure \ref{fig_vgg}. Unlike the ResNet architecture it does not feature skip connections, also it features a stack of two dense fully connected layers at the end.
 
 
 \begin{figure*}[!t]
