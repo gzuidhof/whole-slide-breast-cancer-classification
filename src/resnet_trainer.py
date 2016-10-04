@@ -32,7 +32,7 @@ class ResNetTrainer(trainer.Trainer):
 
         logging.info("Defining network")
         net = resnet.ResNet_FullPre_Wide(input_var, P.DEPTH, P.BRANCHING_FACTOR)
-        #net=resnet.ResNet_FullPreActivation(input_var, P.DEPTH)
+        
         self.network = net
         train_fn, val_fn, l_r = resnet.define_updates(self.network, input_var, target_var)
 
@@ -50,7 +50,7 @@ class ResNetTrainer(trainer.Trainer):
         f, axarr = plt.subplots(4,4,figsize=(12,12))
         for i in range(16):
             x = i%4
-            y = i/4
+            y = i//4
             axarr[y,x].imshow(im[i])
             axarr[y,x].set_title(label_name(labels[i]))
             axarr[y,x].axis('off')

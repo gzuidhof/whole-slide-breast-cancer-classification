@@ -2,14 +2,12 @@ from __future__ import division
 from params import params as P
 import numpy as np
 import skimage
-
+import cv2
 try:
-    a = 1/0
+    a = 1/0 #Use scipy.ndimage instead of OpenCV2 for consistency
     import cv2
     CV2_AVAILABLE=True
     print "OpenCV 2 available, using that for augmentation"
-    from scipy.ndimage.interpolation import rotate, shift, zoom, affine_transform
-    from skimage.transform import warp, AffineTransform
 except:
     from scipy.ndimage.interpolation import rotate, shift, zoom, affine_transform
     from skimage.transform import warp, AffineTransform
@@ -43,7 +41,7 @@ def augment(images):
         image = images[i]
 
         if h != 0 and s != 0 and v != 0:
-            image = hsv_augment(image, h,s,v)
+            image = hsv_augment_opencv(image, h,s,v)
 
         if CV2_AVAILABLE:
             image = cv2.warpAffine(image, M, (pixels, pixels))
@@ -93,7 +91,6 @@ def crop_or_pad(image, desired_size, pad_value):
 
     return image
 
-
 def flip_axis(x, axis):
     x = np.asarray(x).swapaxes(axis, 0)
     x = x[::-1, ...]
@@ -116,5 +113,38 @@ def hsv_augment(image, h, s, v, clip=True):
 
     return image
 
-    
+def hsv_augment_opencv(im, h, s, v):
+    """
+    Augments an image with multiplicative hue, saturation and value.
+    `hue`, `saturation` and `value` should be scalars between -1 and 1.
+    Return value: c01 RGB image
+    """
+
+
+    #`im` should be 01c RGB.
+    im = im.transpose(1,2,0).astype(np.float32)
+
+    # Convert to HSV
+    im = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
+
+    # Rescale hue from 0-360 to 0-1.
+    im[:, :, 0] /= 360.
+
+    # Mask value == 0
+    # Add random hue, saturation and value
+    im[:, :, 0] *= h
+    im[:, :, 1] *= s
+    im[:, :, 2] *= v
+
+    # Clip pixels from 0 to 1
+    im = np.clip(im, 0.0, 1.0)
+
+    # Rescale hue from 0-1 to 0-360.
+    im[:, :, 0] *= 360.
+    # Convert back to RGB in 0-1 range.
+    im = cv2.cvtColor(im, cv2.COLOR_HSV2RGB)
+
+    return im.transpose(2,0,1)
+
+
 

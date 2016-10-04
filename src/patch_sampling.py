@@ -33,7 +33,7 @@ def custom_generator(batch_size, wsi_random_patch_sampler, deterministic=False):
     # 0-index the labels
     labels -= 1
 
-    return images.astype(np.float32), labels.astype(np.int32), filenames
+    return images.astype(np.float32,copy=False), labels.astype(np.int32), filenames
 
 def prepare_custom_sampler(mini_subset=False, override_cache_size=None, return_samplers=False):
     """

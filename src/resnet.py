@@ -65,21 +65,25 @@ def ResNet_Stacked(output_of_network, n=4, k=2):
 
 
     l = output_of_network
-
-    l = ConvLayer(l, num_filters = 48*k, filter_size=(1,1), stride=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'))
+    l = MaxPool2DLayer(l, 2)
+    l = batch_norm(ConvLayer(l, num_filters = 64*k, filter_size=(3,3), stride=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'), pad='same'))
+    
     l = residual_block(l, first=True, increase_dim=True, filters=k*64)
     for _ in range(1,(n+2)):
         l = residual_block(l, filters=k*64)
     
     bn_post_conv = BatchNormLayer(l)
-    bn_post_relu = NonlinearityLayer(bn_post_conv, rectify)
+    l = bn_post_relu = NonlinearityLayer(bn_post_conv, rectify)
 
-    # average pooling
-    #avg_pool = GlobalPoolLayer(bn_post_relu)
-    print bn_post_relu.output_shape
+    l = MaxPool2DLayer(l, 2)
+    l = batch_norm(ConvLayer(l, num_filters = 192, filter_size=(3,3), stride=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'), pad='same'))
+    l = batch_norm(ConvLayer(l, num_filters = 192, filter_size=(3,3), stride=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'), pad='same'))
+    l = MaxPool2DLayer(l, 2)
 
-    l = batch_norm(ConvLayer(bn_post_relu, num_filters=128, filter_size=(96,96), nonlinearity=rectify, W=HeNormal(gain='relu')))
-    l = batch_norm(ConvLayer(bn_post_relu, num_filters=3, filter_size=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu')))
+    print l.output_shape
+
+    l = batch_norm(ConvLayer(l, num_filters=256, filter_size=(12,12), nonlinearity=rectify, W=HeNormal(gain='relu')))
+    l = ConvLayer(l, num_filters=3, filter_size=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'))
     l = GlobalPoolLayer(l)
     # fully connected layer
     network = DenseLayer(l, num_units=num_classes, W=HeNormal(), nonlinearity=softmax)
@@ -209,7 +213,7 @@ def define_updates(output_layer, X, Y):
     test_acc = T.mean(T.eq(T.argmax(output_test, axis=1), Y), dtype=theano.config.floatX)
 
     # get parameters from network and set up sgd with nesterov momentum to update parameters, l_r is shared var so it can be changed
-    l_r = theano.shared(np.array(LR_SCHEDULE[0], dtype=theano.config.floatX))
+    l_r = theano.shared(np.array(P.LEARNING_RATE, dtype=theano.config.floatX))
     params = lasagne.layers.get_all_params(output_layer, trainable=True)
     updates = nesterov_momentum(loss, params, learning_rate=l_r, momentum=P.MOMENTUM)
     #updates = adam(loss, params, learning_rate=l_r)

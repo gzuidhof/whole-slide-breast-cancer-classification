@@ -44,9 +44,13 @@ class Trainer(object):
         folders = ['../models', self.model_folder, self.plot_folder, self.image_folder]
         map(util.make_dir_if_not_present, folders)
 
-    def save_model(self):
+    def save_model(self, best=False):
         logging.info("Saving model")
-        save_filename = os.path.join(self.model_folder,'{}_epoch{}.npz'.format(self.model_name, self.epoch))
+
+        if best:
+            save_filename = os.path.join(self.model_folder,'{}_best_epoch{}.npz'.format(self.model_name, self.epoch))
+        else:
+            save_filename = os.path.join(self.model_folder,'{}_epoch{}.npz'.format(self.model_name, self.epoch))
         np.savez_compressed(save_filename, *lasagne.layers.get_all_param_values(self.network))
 
     def plot_and_save_metrics(self):
@@ -95,16 +99,21 @@ class Trainer(object):
 
         print self.milestone_epoch, self.epoch
 
-
-        if ((train_values[acc_index] - self.best_train_accuracy) >= P.MILESTONE_ACC_EPSILON or (val_values[acc_index] - self.best_accuracy) >= 0.0):
-            self.best_train_accuracy = train_values[acc_index]
+        if val_values[acc_index] >= self.best_accuracy:
+            self.best_accuracy = val_values[acc_index]
             self.milestone_epoch = self.epoch
+            self.save_model(best=True)
+
+
+        #if ((train_values[acc_index] - self.best_train_accuracy) >= P.MILESTONE_ACC_EPSILON or (val_values[acc_index] - self.best_accuracy) >= 0.0):
+            #self.best_train_accuracy = train_values[acc_index]
+            #self.milestone_epoch = self.epoch
         
         if (self.epoch - self.milestone_epoch) >= self.milestone_tollerance:		
             self.milestone_epoch = self.epoch
             self.milestone_tollerance = self.milestone_tollerance * P.MILESTONE_INC_FACTOR
             self.l_r.set_value(np.float32(self.l_r.get_value()*P.LR_DECAY))
-            logging.info("Learning is decreasing")
+            logging.info("Learning is decreasing to " + str(self.l_r.get_value()))
         else:
             logging.info("Learning rate will be kept at its current value for at least the next {} epochs".format(
             floor(self.milestone_tollerance + self.milestone_epoch - self.epoch)))

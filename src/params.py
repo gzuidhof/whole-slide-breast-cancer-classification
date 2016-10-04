@@ -30,6 +30,7 @@ class Params():
         self.PIXELS = cf.getint('dataset','pixels')
         self.CHANNELS = cf.getint('dataset','channels')
         self.N_CLASSES = cf.getint('dataset','n_classes')
+        self.STACK_ON_N_CLASSES = cf.getint('dataset','stack_on_n_classes')
 
         self.SUBSET = None if cf.get('dataset','subset')=='None' else cf.getint('dataset','subset')
 
