@@ -575,6 +575,11 @@ The learning rate reduction policy is as follows. The learning rate is multiplie
 \subsection{Data augmentation}
 Artificially increasing the amount of data by adding variations of the original data can further help train a model that generalizes well. Augmentation consists of applying (random) pertubations to the samples in ways that do not change the label of the samples. It has a regularizing effect which helps prevent overfitting. Especially effective are augmentations that are also realistic examples of real world data.
 
+\subsection{Model parameters}
+A starting learning rate of 0.05 was used for the WRN-4-2 model, 0.01 for VGG-16. These values were emperically determined to work well. Rectified linear units were used throughout both networks as nonlinearities. A minibatch size of 22 was used per parameter update step, for determining the performance on the validation set batches of 128 patches were used. Every patch is labeled with the value of the center pixel in the annotations. 
+
+To create one minibatch first the classes are sampled with uniform probability. Then for every class random locations are chosen within the annotation with this class. As this allows for near-infinite amount of locations where this sampling can take place, the concept of epoch is somewhat lost. We will define one epoch to be 300 minibatches for training, and 200 for validation. 
+
 \medskip
 
 The augmentation methods used are as follows:
@@ -586,12 +591,12 @@ The images are randomly mirrored in the X and/or Y direction, both with a 0.5 pr
 The images are randomly rotated 0, 90, 180, or 270 degrees with equal probability.
 
 \subsubsection{HSV jittering}
-HSV is a colorspace that represents a color image in three channels; a \emph{hue} (color), \emph{saturation} (vibrance) and a \emph{value} (brightness) channel. There exists a large variability in the staining of the slides, which shows itself mostly in the hue and saturation channel. We randomly jitter the hue and saturation of an image with a random value between -0.075 and 0.075. The values of all pixels are then clipped between 0 and 1.
+HSV is a colorspace that represents a color image in three channels; a \emph{hue} (color), \emph{saturation} (vibrance) and a \emph{value} (brightness) channel. There exists a large variability in the staining of the slides, which shows itself mostly in the hue and saturation channel. We randomly jitter the hue and saturation of an image by multiplying it with a random value between -1.075 and 1.075. The values of all pixels are then clipped between 0 and 1.
 
 \begin{figure}[!t]
 \centering{}
-\includegraphics[width=2.5in]{augment_examples}
-\caption{Examples of augmentations applied to patches of 224 by 224 pixels. (a) The original image. (b) Augmented versions of this image. Note the slight shift in hue and saturation for some of the images.}
+\includegraphics[width=3.4in]{augment_examples}
+\caption{Examples of augmentations applied to patches of 224 by 224 pixels. In the left column the original image is shown, in the other columns augmented versions of this same image are shown. Note the slight shift in hue and saturation for some of the augmentations.}
 \label{fig_augment}
 \end{figure}
 
@@ -599,6 +604,7 @@ HSV is a colorspace that represents a color image in three channels; a \emph{hue
 \medskip
 
 Another commonly used data augmentation method is also zooming. This was not used here, as the size of the nuclei plays a role in determining the class label. Elastic distortions were succesfully applied as part of the data augmentation strategy in other applications of convolutional neural networks \cite{elastransforms}, also in the medical imaging domain (cytology) \cite{unet}. The irregularity of the sizes of the nuclei, as well as the architectural features are important biomarkers that can be used to distinguish between benign and cancerous lesions. Applying these elastic distortions would likely contaminate this information, and as such, it was not used here.
+
 
 
 
