@@ -193,7 +193,6 @@ class ResNetTrainer(trainer.Trainer):
 if __name__ == "__main__":
     # Load the samplers (which loads the masks)
     
-
     X_train = [P.BATCH_SIZE_TRAIN]*(P.EPOCH_SAMPLES_TRAIN)*P.N_EPOCHS
     X_val = [P.BATCH_SIZE_VALIDATION]*(P.EPOCH_SAMPLES_VALIDATION)*P.N_EPOCHS
     

@@ -71,3 +71,6 @@ wsi_predictions/
 *.aux
 tex/article.aux
 *.bbl
+*.bbl
+tex/article.aux
+*.gz

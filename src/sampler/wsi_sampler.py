@@ -76,8 +76,11 @@ class WSISampler(object):
 
     def fill_cache_non_mir(self, label=None):
         img = ndimage.imread(self.filename)
-        try:
-            for i in range(self.cache_size):
+
+        tries = 0
+        while tries < 10:
+            try:
+                for i in range(self.cache_size):
 
                     x,y = self.mask.generate_position(label)
 
@@ -85,10 +88,13 @@ class WSISampler(object):
                     image = image.transpose(2,0,1) #From 0,1,c to c,0,1
                     
                     self.cache.append(image)
-        except e:
-            print self.filename
-            print img.shape
-            print e
+
+                break
+
+            except Exception as e:
+                print "Failed, but continuing", self.filename, img.shape, e
+
+            tries +=1
             
         
         del img

@@ -78,11 +78,14 @@ def ResNet_Stacked(output_of_network, n=4, k=2):
     l = MaxPool2DLayer(l, 2)
     l = batch_norm(ConvLayer(l, num_filters = 192, filter_size=(3,3), stride=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'), pad='same'))
     l = batch_norm(ConvLayer(l, num_filters = 192, filter_size=(3,3), stride=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'), pad='same'))
+    
+    
+    
     l = MaxPool2DLayer(l, 2)
-
+    remaining_size = l.output_shape[2]
     print l.output_shape
 
-    l = batch_norm(ConvLayer(l, num_filters=256, filter_size=(12,12), nonlinearity=rectify, W=HeNormal(gain='relu')))
+    l = batch_norm(ConvLayer(l, num_filters=256, filter_size=(remaining_size,remaining_size), nonlinearity=rectify, W=HeNormal(gain='relu')))
     l = ConvLayer(l, num_filters=3, filter_size=(1,1), nonlinearity=rectify, W=HeNormal(gain='relu'))
     l = GlobalPoolLayer(l)
     # fully connected layer

@@ -28,7 +28,7 @@ colors3=['b','g']
 best = []
 
 
-def make_plot(names, labels, colors, title, out_file):
+def make_plot(names, labels, colors, title, out_file, max_epoch):
 
     dfs = map(get_metrics, names)
 
@@ -52,8 +52,8 @@ def make_plot(names, labels, colors, title, out_file):
     plt.savefig(out_file,bbox_inches='tight')
     #plt.show()
 
-make_plot(names3, labels3, colors3, title="3 class CNN performance", out_file='output/3class_performance.png')
-make_plot(names2, labels2, colors2, title="2 class CNN performance", out_file='output/2class_performance.png')
+make_plot(names3, labels3, colors3, title="3 class CNN performance", out_file='output/3class_performance.png', max_epoch=max_epoch)
+make_plot(names2, labels2, colors2, title="2 class CNN performance", out_file='output/2class_performance.png', max_epoch=max_epoch)
 
 best = ['{0:.4f}'.format(b) for b in best]
 print best
@@ -90,6 +90,20 @@ table = r"""
 
 with open('output/table_accuracy_224.tex', 'w') as f:
     f.write(table)
+
+
+names4=['stack_on_2class_768', 'stack_on_3class_768']
+labels4=["Stacked on 2 class", "Stacked on 3 class"]
+colors4=['b','g']
+
+names5=['stack_on_3class_512', 'stack_on_3class_768', 'stack_on_3class_1024']
+labels5=["512x512 input", "768x768 input", "1024x1024 input"]
+colors5=['b', 'g', 'm']
+
+make_plot(names4, labels4, colors4, title="", out_file='output/768_performance.png', max_epoch=160)
+make_plot(names5, labels5, colors5, title="", out_file='output/patch_sizes_performance.png', max_epoch=160)
+
+
 
 
 
