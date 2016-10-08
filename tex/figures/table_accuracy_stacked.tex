@@ -1,0 +1,30 @@
+
+\begin{table}[!t]
+%% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.1}
+% if using array.sty, it might be a good idea to tweak the value of
+% \extrarowheight as needed to properly center the text within the cells
+\caption{Best epoch patch-level accuracy of stacked networks}
+\label{table_results_stacked}
+\centering
+%% Some packages, such as MDW tools, offer better commands for making tables
+%% than the plain LaTeX2e tabular which is used here.
+\begin{tabular}{|llr|}
+\hline
+\textsc{Input patch size}\pbox{2cm}{}&\textsc{Stacked on}&\textsc{Accuracy}\\
+\hline
+\textit{512x512}&&\\
+&3 Class WRN-4-2& 0.8723 \\
+%\hline
+\textit{768x768}&&\\
+&2 Class WRN-4-2&  0.8797 \\
+&3 Class WRN-4-2& 0.9050\\
+%\hline
+\textit{1024x1024}&&\\
+&3 Class WRN-4-2& 0.9135\\
+\hline
+
+\end{tabular}
+\end{table}
+
+

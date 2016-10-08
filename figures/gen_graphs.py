@@ -55,10 +55,22 @@ def make_plot(names, labels, colors, title, out_file, max_epoch):
 make_plot(names3, labels3, colors3, title="3 class CNN performance", out_file='output/3class_performance.png', max_epoch=max_epoch)
 make_plot(names2, labels2, colors2, title="2 class CNN performance", out_file='output/2class_performance.png', max_epoch=max_epoch)
 
+names4=['stack_on_2class_768', 'stack_on_3class_768']
+labels4=["Stacked on 2 class", "Stacked on 3 class"]
+colors4=['b','g']
+
+names5=['stack_on_3class_512', 'stack_on_3class_768', 'stack_on_3class_1024']
+labels5=["512x512 input", "768x768 input", "1024x1024 input"]
+colors5=['b', 'g', 'm']
+
+make_plot(names4, labels4, colors4, title="", out_file='output/768_performance.png', max_epoch=120)
+make_plot(names5, labels5, colors5, title="", out_file='output/patch_sizes_performance.png', max_epoch=120)
+
 best = ['{0:.4f}'.format(b) for b in best]
+
 print best
 
-table = r"""
+table224 = r"""
 \begin{table}[!t]
 %% increase table row spacing, adjust to taste
 \renewcommand{\arraystretch}{1.1}
@@ -89,22 +101,45 @@ table = r"""
 #print a % 123, 123, 123, 123, 123, 123, 123
 
 with open('output/table_accuracy_224.tex', 'w') as f:
-    f.write(table)
-
-
-names4=['stack_on_2class_768', 'stack_on_3class_768']
-labels4=["Stacked on 2 class", "Stacked on 3 class"]
-colors4=['b','g']
-
-names5=['stack_on_3class_512', 'stack_on_3class_768', 'stack_on_3class_1024']
-labels5=["512x512 input", "768x768 input", "1024x1024 input"]
-colors5=['b', 'g', 'm']
-
-make_plot(names4, labels4, colors4, title="", out_file='output/768_performance.png', max_epoch=160)
-make_plot(names5, labels5, colors5, title="", out_file='output/patch_sizes_performance.png', max_epoch=160)
+    f.write(table224)
 
 
 
+table_stacked = r"""
+\begin{table}[!t]
+%% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.1}
+% if using array.sty, it might be a good idea to tweak the value of
+% \extrarowheight as needed to properly center the text within the cells
+\caption{Best epoch patch-level accuracy of stacked networks}
+\label{table_results_stacked}
+\centering
+%% Some packages, such as MDW tools, offer better commands for making tables
+%% than the plain LaTeX2e tabular which is used here.
+\begin{tabular}{|llr|}
+\hline
+\textsc{Input patch size}\pbox{2cm}{}&\textsc{Stacked on}&\textsc{Accuracy}\\
+\hline
+\textit{512x512}&&\\
+&3 Class WRN-4-2& 512PERFORMANCE \\
+%\hline
+\textit{768x768}&&\\
+&2 Class WRN-4-2&  768PERFORMANCE_2 \\
+&3 Class WRN-4-2& 768PERFORMANCE_3\\
+%\hline
+\textit{1024x1024}&&\\
+&3 Class WRN-4-2& 1024PERFORMANCE\\
+\hline
+
+\end{tabular}
+\end{table}
+
+
+""".replace('512PERFORMANCE',best[6]).replace('768PERFORMANCE_2', best[4]).replace(
+    '768PERFORMANCE_3', best[5]).replace('1024PERFORMANCE', best[8])
+
+with open('output/table_accuracy_stacked.tex', 'w') as f:
+    f.write(table_stacked)
 
 
 #metrics_files = 

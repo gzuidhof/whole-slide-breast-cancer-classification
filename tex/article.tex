@@ -488,10 +488,8 @@ Increasingly, slides of human tissue are digitized instead of being analysed onl
 
 Visual microscopic interpretation of tissue sections is laborious and prone to subjectivity. \emph{Computer-aided diagnosis (CAD)} has a huge potential in alleviating shortcomings of human interpretation and will reduce the workload of the pathologists. As a result, more accurate diagnostic information may be extracted, helping clinicians in selecting the most optimal treatment for individual patients. CAD can facilitate diagnosis by sieving out obviously benign slides and providing quantitative characterization of suspicious areas.
 
-\subsection{DCIS and IDC}
-A lesion is considered to be a DCIS when there is a proliferation of malignant epithelial cells within the breast parenchymal structures. When these cells are no longer contained within this basement membrane, the carcinoma is invasive and is classified as an invasive ductal carcinoma (IDC) \cite{ellis2010intraductal}.
-
-
+\subsection{Domain? (needs better title)}
+A lesion is considered to be a DCIS when there is a proliferation of malignant epithelial cells within the breast parenchymal structures. When these cells are no longer contained within this basement membrane, the carcinoma is invasive and is classified as an invasive ductal carcinoma (IDC) \cite{ellis2010intraductal}. 
 
 \begin{figure*}[!t]
 \centering
@@ -500,7 +498,7 @@ A lesion is considered to be a DCIS when there is a proliferation of malignant e
 %\hfil
 %\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
 %\label{fig_second_case}}
-\caption{Examples from the three classes we aim to distinguish. (a) Normal tissue and benign lesions. From top-to-bottom, left-to-right: lymphocytes?? with connective tissue surrounding it, mostly fatty tissue, healthy mammal ducts, a ductal hyperplasia which is very similar in appearance to a DCIS lesion. (b) Ductal carcinoma in situ (DCIS), note that the tumor cells are contained within the duct structure. (c) Invasive ductal carcinoma (IDC).}
+\caption{Examples from the three classes we aim to distinguish. (a) Normal tissue and benign lesions. From top-to-bottom, left-to-right: ?? with connective tissue surrounding it, mostly fatty tissue, healthy mammal ducts, a ductal hyperplasia which is very similar in appearance to a DCIS lesion. (b) Ductal carcinoma in situ (DCIS), note that the tumor cells are contained within the duct structure. (c) Invasive ductal carcinoma (IDC).}
 \end{figure*}
 
 \subsection{Patch-based classification}
@@ -873,36 +871,7 @@ IDC&2307& 432\\
 
 
 \input{tables/table_accuracy_224}
-
-
-\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-\renewcommand{\arraystretch}{1.1}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-\caption{Best epoch patch-level accuracy of stacked networks}
-\label{table_results_stacked}
-\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-\begin{tabular}{|llr|}
-\hline
-\textsc{Input patch size}\pbox{2cm}{}&\textsc{Stacked on}&\textsc{Accuracy}\\
-\hline
-\textit{512x512}&&\\
-&3 Class WRN-4-2& 123\\
-%\hline
-\textit{768x768}&&\\
-&2 Class WRN-4-2&  123\\
-&3 Class WRN-4-2& 123\\
-%\hline
-\textit{1024x1024}&&\\
-&3 Class WRN-4-2& 123\\
-\hline
-
-\end{tabular}
-\end{table}
-
+\input{tables/table_accuracy_stacked}
 
 
 
