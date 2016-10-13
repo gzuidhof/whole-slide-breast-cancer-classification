@@ -8,9 +8,9 @@ import sys
 sys.path.append("../")
 import params
 
-MODEL_PATH = '../../models/1472001110_stacked/1472001110_stacked_epoch224.npz'
+MODEL_PATH = '../../models/dense_predict_model.npz'
 params.params = params.Params(['../../config/default.ini'] + 
-                              ['../../config/stacked.ini', '../../config/titania_stacked.ini'])
+                              ['../../config/stack_on_3class_768.ini'])
 
 BACKGROUND_DATA_LEVEL = 3
 
@@ -18,10 +18,12 @@ SUPER_PATCH_SIZE=2048
 PATCH_SIZE = 768
 STRIDE = 256
 DATA_LEVEL = 1
-BATCH_SIZE = 48 if len(sys.argv)==1 else int(sys.argv[1])
+BATCH_SIZE = 44 if len(sys.argv)==1 else int(sys.argv[1])
 
-WSI_FOLDER = '/mnt/rdstorage1/Userdata/Guido/slides/'
+WSI_FOLDER = '/mnt/pathology3/VPH-PRISM/breast_dataset/'
+SUBFOLDERS = ['Benign/MRXS', 'DCIS/MRXS', 'IDC/MRXS', 'Normal/MRXS', 'LCIS/MRXS']
 OUT_FOLDER = '../../wsi_predictions/'
+TODO_FILE = os.path.join(OUT_FOLDER, 'slides.txt')
 
 from params import params as P
 import resnet
@@ -39,7 +41,7 @@ def load_model(model_path):
     net = resnet.ResNet_FullPre_Wide(input_var, 4, 2)
     all_layers = lasagne.layers.get_all_layers(net)
     net = all_layers[-3]
-    net = resnet.ResNet_Stacked_Old(net)
+    net = resnet.ResNet_Stacked(net)
 
     with np.load(model_path) as f:
         param_values = [f['arr_%d' % i] for i in range(len(f.files))]
@@ -235,7 +237,7 @@ def overlapping_patch_generator(sampler, positions, patch_size_super, data_level
             
     return gen()
 
-def predict_slide(wsi_path, slide_filename):
+def predict_slide(wsi_path, slide_filename, predict_fn):
     sampler = WSIParallelSampler(wsi_path, data_level=0, multiprocess=False, n_producers=1)
     image_dims = sampler.get_image_dimensions()
     del sampler
@@ -245,8 +247,6 @@ def predict_slide(wsi_path, slide_filename):
     lowres_bg_mask = determine_background(wsi_path, image_dims, BACKGROUND_DATA_LEVEL)
 
 
-    print "Loading model"
-    predict_fn = load_model(MODEL_PATH)
     sampler = WSIParallelSampler(wsi_path, data_level=DATA_LEVEL, multiprocess=True, n_producers=8, max_queue_size=16)
 
     print "Generating positions to predict."
@@ -314,7 +314,28 @@ def predict_slide(wsi_path, slide_filename):
 
 
 if __name__ == "__main__":
-    all_slides = glob(WSI_FOLDER+'*.mrxs')
+
+    with open(TODO_FILE, 'r') as f:
+        TODO_WSI = f.readlines()
+        TODO_WSI = [file.replace('\n',"").replace('\r',"") for file in TODO_WSI if '#' not in file]
+
+    print "Total amount of files to predict", len(TODO_WSI)
+    
+    all_slides = []
+
+    for wsi_name in TODO_WSI:
+        for folder in SUBFOLDERS:
+            path = os.path.join(WSI_FOLDER, folder, wsi_name + '.mrxs')
+            if os.path.isfile(path):
+                all_slides.append(path)
+                break
+        else:
+            print "Could not find ", wsi_name
+
+    print "Total amount of these files found", len(all_slides)
+
+    print "Loading model"
+    predict_fn = load_model(MODEL_PATH)
 
     while True:
 
@@ -327,7 +348,6 @@ if __name__ == "__main__":
             slide_filename = slide_path.split('/')[-1].split('.')[0] + "_STRIDE" + str(STRIDE)
             claim_path = OUT_FOLDER+slide_filename+"_claimed.txt"
             
-            
             if len(glob(claim_path)) < 1:
                 non_busy_slides.append((slide_path, slide_filename, claim_path))
 
@@ -336,14 +356,13 @@ if __name__ == "__main__":
 
         if len(non_busy_slides) == 0:
             break
-
        
         current_slide_path, current_slide_filename, claim_file= non_busy_slides[0]
         
         open(claim_file, 'a').close()
 
         print "Now predicting", current_slide_path
-        predict_slide(current_slide_path, current_slide_filename)
+        predict_slide(current_slide_path, current_slide_filename, predict_fn)
 
 
     
