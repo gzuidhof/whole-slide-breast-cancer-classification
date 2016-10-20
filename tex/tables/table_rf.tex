@@ -1,0 +1,22 @@
+
+    \begin{table}[h]
+    \renewcommand{\arraystretch}{1.1}
+    \caption{Results of whole-slide image label prediction}
+    \label{table_results_stacked}
+    \centering
+    \begin{tabular}{|lrrrr|}
+    \hline
+    \textsc{Labels}&\textsc{Result set}&\textsc{Acc}&\textsc{Kappa}&\textsc{AUC}\\
+    \hline
+    \textit{Benign, Cancer}&&&&\\
+    &Leave-one out CV&0.8726&0.7406&0.9166 \\
+    &Independent test set&0.8906&0.7808&0.9355 \\
+    \textit{Benign, DCIS, IDC}&&&&\\
+    &Leave-one out CV&0.8217&0.7247&- \\
+    &Independent test set&0.7344&0.5771&- \\
+    \hline
+
+    \end{tabular}
+    \end{table}
+
+    

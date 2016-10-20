@@ -439,7 +439,7 @@ The Netherlands and the Donders Institute for Brain, Cognition and Behaviou, 652
 % As a general rule, do not put math, special symbols or citations
 % in the abstract or keywords.
 \begin{abstract}
-This paper presents and evaluates a method for detection and localization of breast malignant lesions in histopathological breast tissue images. The goal of this method is to best classify digitized whole-slide hematoxylin and eosin (H\&E) stained whole-slide images (WSIs) into three classes: benign, ductal carcinoma in situ (DCIS) and invasive ductal carcinoma (IDC). A convolutional neural network (CNN) was trained on small patches of these images, labeled with the class of the center pixel. To distinguish between the DCIS and IDC class the information available in these small patches is often not sufficient. A second CNN was trained on the output of the aforementioned network with a larger patch size to capture a larger context. Sliding this classifier across a whole slide image yields a probability map. From this probability map structural and statistical features were extracted, which were used to train a final classifier to predict the label for the whole-slide image. The system is evaluated on a dataset containing X WSIs of breast tissue using FROC analysis. The results show a...
+This paper presents and evaluates a method for detection and characterization of breast malignant lesions in histopathological breast tissue images. The goal of this method is to best classify digitized whole-slide hematoxylin and eosin (H\&E) stained whole-slide images (WSIs) into three classes: benign, ductal carcinoma in situ (DCIS) and invasive ductal carcinoma (IDC). A convolutional neural network (CNN) was trained on small patches of these images, labeled with the class of the center pixel. To distinguish between the DCIS and IDC class the information available in these small patches is often not sufficient. A second CNN was trained on the output of the aforementioned network with a larger patch size to capture a larger context. Sliding this classifier across a whole-slide image (WSI) yields a probability map. From this probability map structural and statistical features were extracted, which were used to train a final classifier to predict the label for the whole-slide image. The system is evaluated on a dataset containing X WSIs of breast tissue using FROC analysis. The results show that the distinction between benign and cancerous WSIs can be predicted with an accuracy of just under 90\%, whereas the three class problem yields an accuracy of 73.4\%.
 \end{abstract}
 
 % Note that keywords are not normally used for peerreview papers.
@@ -488,46 +488,27 @@ Increasingly, slides of human tissue are digitized instead of being analysed onl
 
 Visual microscopic interpretation of tissue sections is laborious and prone to subjectivity. \emph{Computer-aided diagnosis (CAD)} has a huge potential in alleviating shortcomings of human interpretation and will reduce the workload of the pathologists. As a result, more accurate diagnostic information may be extracted, helping clinicians in selecting the most optimal treatment for individual patients. CAD can facilitate diagnosis by sieving out obviously benign slides and providing quantitative characterization of suspicious areas.
 
-\subsection{Domain? (needs better title)}
-A lesion is considered to be a DCIS when there is a proliferation of malignant epithelial cells within the breast parenchymal structures. When these cells are no longer contained within this basement membrane, the carcinoma is invasive and is classified as an invasive ductal carcinoma (IDC) \cite{ellis2010intraductal}. 
+%\textit{TODO: introduce DCIS, IDC a little bit at least.} 
 
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=7in]{lesion_examples}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-\caption{Examples from the three classes we aim to distinguish. (a) Normal tissue and benign lesions. From top-to-bottom, left-to-right: ?? with connective tissue surrounding it, mostly fatty tissue, healthy mammal ducts, a ductal hyperplasia which is very similar in appearance to a DCIS lesion. (b) Ductal carcinoma in situ (DCIS), note that the tumor cells are contained within the duct structure. (c) Invasive ductal carcinoma (IDC).}
-\end{figure*}
+\subsection{Goal definition}
 
-\subsection{Patch-based classification}
+We will explore an approach for automatic detection and characterization of these breast malignant lesions in whole-slide images (WSIs) of hematoxylin and eosin (H\&E) stained slides. H\&E staining is the most commonly used staining in medical diagnosis and is often performed as part of standard procedure. It colors cell nuclei blue, and cytoplasm and connective tissue pink. \textit{TODO: say something about other staining/immunohistochemistry methods that can be used, and why not using it may be beneficial (save time, money).}
 
-Convolutional neural networks, as well as other statistical machine learning methods, are bound by computational and memory constraints. The tissue slides are scanned at a high magnification (up to 40X), resulting in very large images. A typical image can be 100,000 by 200,000 pixels, and have a file size of around 20GB uncompressed. 
+\begin{figure}[!t]
+\centering{}
+\includegraphics[width=3.45in]{lesinos_diagrams.png}
+\vspace{-0.38cm}\caption{Schematic drawings of mammary ducts. As the cancer progresses malignant and abnormal cells gather within the ducts, the mioepythelium changes and loses its ability to contain these cells within the duct, wihhc renders the cancer invasive. (a) Normal duct. (b) Ductal hyperplasia (benign). (c) Ductal carcinoma in situ (DCIS). (c) Invasive ductal carcinoma (IDC). }
+\label{fig_diagrams}
+\end{figure}
 
-To create a classification for the whole-slide image a patch based method will be employed. A patch is a small sub-image of the whole image. By applying the classifier in a sliding window approach over the original image we can create a prediction map for the whole image.
 
-A trade-off between input size, mini-batch size and model complexity has to be made. If the input size increases, the amount of activations in the feed-forward step of training also increases. These are required for computing the gradient, and thus have to be stored in memory, leading to a larger memory footprint. The amount of images used to determine the error gradient for one update step is called the batch size. A larger batch size generally leads to a less noisy gradient as it is averaged over more data points. This does not necessarily lead to a faster convergence, or to a better local optimum, as the noise can be beneficial, but in the general sense a larger batch size is beneficial. 
 
-\subsection{Incorporating more context}
+The final goal of the system is to singly label whole-slide images with one of three classes: \emph{benign, DCIS, or IDC}. Normal tissue and benign lesions are to be assigned to the benign class. A lesion is considered to be a DCIS when there is a proliferation of malignant epithelial cells within the breast parenchymal structures. When these cells are no longer contained within this basement membrane, the carcinoma is invasive and is classified as an invasive ductal carcinoma (IDC) \cite{ellis2010intraductal}. Figure \ref{fig_lesion_examples} shows examples of normal tissue and breast benign, DCIS and IDC lesions.
 
-As a patch is limited in size, it can only contain so much information. One could downsample a larger image to fit a patch, but fine-grained detail would be lost. To distinguish between benign and cancerous tissue, this fine detail is especially important. To tell apart DCIS from IDC, larger scale architectural features play a more important role. 
 
-One approach to incorporate both fine-grained detail as well as larger scale structural information is the use of \emph{multi-scale convolutional neural networks} \cite{multiscale_shen,buyssens2012multiscale}. With this approach an image is offered to one network at different magnifications. Often, there are multiple sub-networks for the different magnification levels. The outputs of these sub-networks is then fused, generally using one or more fully connected layers. This allows for training the system as a whole using ordinary backpropagation.
+The method described in this paper to achieve this automatic labeling consists of several building blocks. Figure \ref{fig_overview} provides an overview of the complete system. First, a fully convolutional neural network is used to generate a dense prediction of the whole-slide image. A dense prediction is an assignment of every pixel in an image to one of the labels. To predict the label of a pixel the context (neighborhood area in the image) is important. Due to computational constraints, it is not featsible to use a large patch incorporating large context at high magnifications to train the system. To overcome this limitation we stack a second convolutional neural network on the output of the first, which can capture a larger input area per prediction. From the dense prediction features are extracted, which are then used as feature set for a statistical classifier model to determine the label of the whole-slide image.
 
-In this paper we will be exploring a different method for incorporating more context, whilst keeping the same level of detail, that of \emph{stacked convolutional neural networks}.  
-
-\subsection{Stacked convolutional neural networks}
-Convolutional neural networks generally consist of a stack of different types of layers. Some types of layers retain the spatial information of the image, such as convolution layers. In these layers, different filters are convolved over the image. These learned filters are not dependent on the input size and this layer can thus be fed an image of a different size without problems. This characteristic is exploited in \emph{fully convolutional neural networks}, which are the state of the art in segmentation \cite{long2015fully}. 
-
-In such a framework the network the output segmentation size is only dependent on the input image size, it can thus be used to segment variable sized images. We will be exploiting this here as well. First, we train a network to classify patches of 224 by 224 pixels. This network will especially learn feature representations that are in the fine detail of the tissue. 
-
-Then, we strip this network of its last few layers that do not satisy this fully convolutional requirement of having spatial information present and are input size dependent. We increase the input size of the network to 768 by 768 pixels, and do a forward pass through this network. The output is a volume, a feature volume  that resembles an image with many feature maps (or color channels). 
-
-We then train another convolutional neural network using this feature volume as its input. The learned weights in the 224 by 224 input-sized network are no longer updated (i.e. they are frozen). The idea is that this stacked network has access to the learned fine detail features, and has very large receptive fields. It can thus learn to exploit both the fine detail, as well as the spatial arrangement of where specific patterns are.
-
-By training these networks in this tiered manner, the computational requirements can be kept in check, whilst enabling both a large patch size, a decent batch size while training and a complex model with large receptive fields.
-
+To develop and evaluate the system we make use of a large cohort consisting of 221 whole-slide images of H\&E stained slides. We split this dataset into three separate sets, one for fitting classification models, one for intermediate validation and model selection, and one final set for final evaluation of the system; the test set. Table \ref{table_dataset} details the amount of slides in each set. There is no overlap in these sets.
 
 \begin{figure*}[!t]
 \centering
@@ -535,52 +516,19 @@ By training these networks in this tiered manner, the computational requirements
 %\label{fig_first_case}}
 %\hfil
 %\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
 \vspace{-0.1cm}\caption{Overview of the proposed system for labeling whole-slide images. (a) Original WSI of breast tissue. (b) Resulting probability map of applying the CNN in a patch-based fashion. (c) Output of the system; a single label for the whole-slide image (either benign, DCIS or IDC).}
+\label{fig_overview}
 \end{figure*}
 
 
 
 
 
-
-
-
-TODO more about domain, dataset
-
-
-
-
-
-
-
-
-
-
-	% Section dense prediction
-
-
-
-
-
-
-
-
-
-
-\section{Dense prediction}
-
-
 \begin{table}[!t]
-%% increase table row spacing, adjust to taste
 \renewcommand{\arraystretch}{1.05}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-\caption{Distribution of dataset consisting of 235 whole-slide images}
+\caption{Dataset details consisting of 221 whole-slide images}
 \label{table_dataset}
 \centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
 \begin{tabular}{|llccc|}
 \hline
 \textsc{Label}&\textsc{Lesion type}&\hspace{-0.4cm}\textsc{WSI Count}&&\\
@@ -589,57 +537,86 @@ TODO more about domain, dataset
 \textit{Benign}&&&&\\
 &None (normal)& ?&&\\
 &Benign lesions& ? &&\\
-%&Ductal hyperplasia& ?&&\\
-%&Adenosis& ?&&\\
-%&Fibrosis& ?&&\\
-%&Duct ectasia& ?&&\\
-%&Fibrocystic ectasia& ?&&\\
-%&Hamartoma& ?&&\\
-%\rule{0pt}{3ex}
-%&\pbox{2.8cm}{Pseudoangiomatous \\ \-\ \-\ \-\ stromal hyperplasia}& ?&&\\
-%\rule{0pt}{3ex}
-%&\pbox{2.8cm}{Sclerosing  \\ \-\ \-\ \-\ lobular hyperplasia}& ?&&\\
-%\rule{0pt}{2ex}
-%&Fibroadenoma& ?&&\\
-%&Mixed benign lesions& ?&&\\
-&\textit{Total}& 54&20&34\\
+&\textit{Total}& 50&19&31\\
 
 %\hline
 \textit{DCIS}&&&&\\
 &Grade I DCIS&  ?&&\\
 &Grade II DCIS& ?&&\\
 &Grade III DCIS& ?&&\\
-&\textit{Total}& 42&12&20\\
+&\textit{Total}& 38&11&20\\
 %\hline
 \textit{IDC}&&&&\\
 &IDC& ?&&\\
-&\textit{Total}& 30&9&14\\
+&\textit{Total}& 30&9&13\\
 
 
 \textit{\textbf{Total}}&&&&\\
-&&\textbf{126}&\textbf{41}&\textbf{68}\\
+&&\textbf{118}&\textbf{39}&\textbf{64}\\
 \hline
 \end{tabular}
 \end{table}
 
 
 
+\begin{figure*}[!t]
+\centering
+\hspace{0.1cm}\includegraphics[width=7in]{lesion_examples}%
+%\label{fig_first_case}}{}
+%\hfil
+%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
+\caption{Examples from the three classes we aim to distinguish. (a) Normal tissue and benign lesions. From top-to-bottom, left-to-right: ?? with connective tissue surrounding it, mostly fatty tissue, healthy mammal ducts, a ductal hyperplasia which is very similar in appearance to a DCIS lesion. (b) Ductal carcinoma in situ (DCIS), note that the tumor cells are contained within the duct structure. (c) Invasive ductal carcinoma (IDC).}
+\label{fig_lesion_examples}
+\end{figure*}
 
-TODO a lot
+
+
+\section{Dense prediction}
+
+
+Convolutional neural networks, as well as other statistical machine learning methods, are bound by computational and memory constraints. The tissue slides are scanned at a high magnification (up to 40X), resulting in very large images. A typical image can be 100,000 by 200,000 pixels, and have a file size of around 20GB uncompressed. 
+
+To create a classification for the whole-slide image a patch based method will be employed. A patch is a small sub-image of the whole image. By applying the classifier in a sliding window approach over the original image we can create a prediction map for the whole image.
+
+A trade-off between input size, mini-batch size and model complexity has to be made. If the input size increases, the amount of activations in the feed-forward step of training also increases. These are required for computing the gradient, and thus have to be stored in memory, leading to a larger memory footprint. The amount of images used to determine the error gradient for one update step is called the batch size. A larger batch size generally leads to a less noisy gradient as it is averaged over more data points \cite{bottou2016optimization}. This does not necessarily lead to a faster convergence, or to a better local optimum, as the noise can be beneficial, but in the general sense a larger batch size is beneficial. 
+
+\subsection{Incorporating more context}
+
+As a patch is limited in size, it can only contain so much information. One could downsample a larger image to fit a patch, but this would result in the loss of fine-grained detail. To distinguish between benign and cancerous tissue, this fine detail is especially important. To tell apart DCIS from IDC, larger scale architectural features play a more important role. 
+
+One approach to incorporate both fine-grained detail as well as larger scale structural information is the use of \emph{multi-scale convolutional neural networks} \cite{multiscale_shen,buyssens2012multiscale}. With this approach an image is offered to one network at different magnifications. Often, there are multiple sub-networks for the different magnification levels. The patches containing a larger context are generally downscalled, which might subsequently lead to a loss of detailed information. The outputs of these sub-networks is then fused, generally using one or more fully connected layers. This allows for training the system as a whole using ordinary backpropagation.
+
+In this paper we explore a different method for incorporating more context, whilst keeping the same level of detail, that of \emph{stacked convolutional neural networks}.  
+
+\subsection{Stacked convolutional neural networks}
+Convolutional neural networks generally consist of a stack of different types of layers. Some types of layers retain the spatial information of the image, such as convolution layers. In these layers, different filters are convolved over the image. These learned filters are not dependent on the input size and this layer can thus be fed an image of a different size without problems. This characteristic is exploited in \emph{fully convolutional neural networks}, which are the state of the art in segmentation \cite{long2015fully}. 
+
+In such a framework, the output segmentation size is only dependent on the input image size.  Therefore, the trained network can be used to segment variable sized images. We will be exploiting this here as well. First, we train a network to classify patches of 224 by 224 pixels. This network will especially learn feature representations that are in the fine detail of the tissue. 
+
+Then, we strip this network of its last few layers that do not satisy this fully convolutional requirement. This requirement involves the availability of spatial information and input size independency. We increase the input size of the network to a larger patch size (e.g. 768 by 768 pixels), and do a forward pass through this network. The output is a volume, a feature volume  that resembles an image with many feature maps (or color channels). 
+
+We then train another convolutional neural network using this feature volume as its input. The learned weights in the 224 by 224 input-sized network are no longer updated (i.e. they are frozen). The idea is that this stacked network has access to the learned fine detail features, and has very large receptive fields. It can thus learn to exploit both the fine detail, as well as the spatial arrangement of different tissue components.
+
+By training these networks in a tiered manner, we limit the number of trainable parameters to the ones in the stacked network, which will result in a more memory managable training process. This complex network can process patches containg a large receptive field at very high resolution. 
+
 \subsection{Architectures}
 
-We will apply two different architectures to the problem of patch classification, with patches of size 224x224 pixels.
+We will apply two different architectures to the problem of patch classification, with patches of size 224x224 pixels. All implementations of convolutional neural networks were developed using the Theano and Lasagne framework for Python \cite{theano,lasagne}. Full implementations are available on GitHub \footnote{To do: wait for confirmation whether this is allowed.}.
 
+\medskip
+
+The networks we apply for 224x224 patch classification:
+\medskip
 
 \subsubsection{Wide Residual Network}
 Residual network was the winner of the 2015 ImageNet challenge \cite{resnet}. Other than previous networks that entered this competition, it features no fully connected layer at the end of the network. It was the deepest succesful architecture to date featuring up to 152 layers. It can get away with this depth by using residual learning blocks, where the layers learn residual functions with relation to the input instead of learning unreferenced functions. To the extreme, it makes it easier to learn the identity function if that is optimal for that layer.
 
-In this study we will apply an adaptation of this architecture, the wide residual network as proposed by Zagoruyko et al. \cite{wideresnet}. They showed that wider and less deep residual networks outperform their deeper and thinner counterparts both in accuracy and efficiency. 
+In this study we apply an adaptation of this architecture, the wide residual network as proposed by Zagoruyko et al. \cite{wideresnet}. They showed that wider and less deep residual networks outperform their deeper and thinner counterparts both in accuracy and efficiency. 
 
-The architecture is a recipe that has three main design choices, the $N$ value that determines the depth, the $k$ value that determines the width (the amount of filters) and the type of ResNet block. Here, we use $N=4$, $k=2$, which was empirically evaluated to fit a decent batch size and train fast. The ResNet block type is detailed in figure \ref{fig_resnet_block}, this is projection block type B as detailed in the original paper. The resulting architecture is shown in figure \ref{fig_resnet}.
-
+The architecture is a recipe that has three main design choices, the $N$ value that determines the depth, the $k$ value that determines the width (the amount of filters) and the type of ResNet block. Here, we use $N=4$, $k=2$, which was empirically evaluated to fit a decent batch size and train fast. To indicate the architecture with these parameters we will henceforth refer to it as \emph{WRN-4-2}. The ResNet block type is detailed in figure \ref{fig_resnet_block}, this is projection block type B as detailed in the original paper. The resulting architecture is shown in figure \ref{fig_resnet}.
+\medskip
 \subsubsection{VGG-16}
-VGG-16 is a popular architecture because of its simplicity \cite{vgg}. It features small 3x3 convolution filters and 2x2 pooling throughout the network and has a depth of 16 layers. The architecture is detailed in figure \ref{fig_vgg}. Unlike the ResNet architecture it does not feature skip connections, also it features a stack of two dense fully connected layers at the end.
+VGG-16 is a popular architecture for a wide range of image recognition and segmentation problems, partly because of the simplicity in its design \cite{vgg}. It features small 3x3 convolution filters and 2x2 pooling throughout the network and has a depth of 16 layers. The architecture is detailed in figure \ref{fig_vgg}. Unlike the ResNet architecture it does not feature skip connections, also it has a stack of two dense fully connected layers at the end.
 
 
 \begin{figure*}[!t]
@@ -658,16 +635,40 @@ VGG-16 is a popular architecture because of its simplicity \cite{vgg}. It featur
 \subsection{Preprocessing}
 As a preprocessing step, the images are normalized by dividing their pixel value by 255. Then, the mean value of each color channel is subtracted to zero center the data.
 
-\subsection{Learning rate decay}
-The learning rate reduction policy is as follows. The learning rate is multiplied by 0.2 after no better validation accuracy has been observed for 8 epochs, this value is called the \emph{patience}. This patience is increased by 20\% after every reduction in learning rate (rounded up).  
+\begin{table}[!t]
+%% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.1}
+% if using array.sty, it might be a good idea to tweak the value of
+% \extrarowheight as needed to properly center the text within the cells
+\caption{Regions of interest (ROI) per class}
+\label{table_roi_count}
+\centering
+%% Some packages, such as MDW tools, offer better commands for making tables
+%% than the plain LaTeX2e tabular which is used here.
+\begin{tabular}{|lcc|}
+\hline
+\textsc{Label}&\textsc{ROI Count}&\\
+\hline
+&\textit{Train}&\textit{Validation}\\
+Benign&5097& 795\\
+%\hline
+DCIS&1092&  151\\
+%\hline
+IDC&2307& 432\\
+\hline
 
-\subsection{Data augmentation}
-Artificially increasing the amount of data by adding variations of the original data can further help train a model that generalizes well. Augmentation consists of applying (random) pertubations to the samples in ways that do not change the label of the samples. It has a regularizing effect which helps prevent overfitting. Especially effective are augmentations that are also realistic examples of real world data.
+\end{tabular}
+\end{table}
+
 
 \subsection{Model parameters}
-A starting learning rate of 0.05 was used for the WRN-4-2 model, 0.01 for VGG-16. These values were emperically determined to work well. Rectified linear units were used throughout both networks as nonlinearities. A minibatch size of 22 was used per parameter update step, for determining the performance on the validation set batches of 128 patches were used. Every patch is labeled with the value of the center pixel in the annotations. 
+We use a nestov accelerated gradient descent for parameter updates \cite{nesterov}. A starting learning rate of 0.05 was used for the WRN-4-2 model, 0.01 for VGG-16. These values were emperically determined to work well. Rectified linear units were used throughout both networks as nonlinearities. Weights were initialized using He initialization \cite{he_init}. A minibatch size of 22 was used per parameter update step, for determining the performance on the validation set batches of 128 patches were used. Every patch is labeled with the value of the center pixel in the annotations. 
 
-To create one minibatch first the classes are sampled with uniform probability. Then for every class random locations are chosen within the annotation with this class. As this allows for near-infinite amount of locations where this sampling can take place, the concept of epoch is somewhat lost. We will define one epoch to be 300 minibatches for training, and 200 for validation. 
+The learning rate reduction policy is as follows. The learning rate is multiplied by 0.2 after no better validation accuracy has been observed for 8 epochs, this value is called the \emph{patience}. This patience is increased by 20\% after every reduction in learning rate (rounded up).  
+
+To generate one minibatch, first the number of samples per class are determined with uniform probabilities. Then for each class, samples are chosen at random locations from within the annotation of that class. Table \ref{table_roi_count} shows the amount of annotated regions for each of the classes. One epoch generally consists of one pass over the whole training set for parameter updates, followed by a full pass over the validation set to measure convergence. As this sampling can origin from near-infinite amount of pixel locations inside all the annotations for different classes, the concept of epoch is somewhat lost. We will define one epoch to be 300 minibatches for training, and 200 for validation. 
+
+Artificially increasing the amount of data by adding variations of the original data can further help train a model that generalizes well. Augmentation consists of applying (random) pertubations to the samples in ways that do not change the label of the samples. It has a regularizing effect which helps prevent overfitting. Especially effective are augmentations that are also realistic examples of real world data.
 
 \medskip
 
@@ -694,12 +695,150 @@ HSV is a colorspace that represents a color image in three channels; a \emph{hue
 
 Another commonly used data augmentation method is also zooming. This was not used here, as the size of the nuclei plays a role in determining the class label. Elastic distortions were succesfully applied as part of the data augmentation strategy in other applications of convolutional neural networks \cite{elastransforms}, also in the medical imaging domain (cytology) \cite{unet}. The irregularity of the sizes of the nuclei, as well as the architectural features are important biomarkers that can be used to distinguish between benign and cancerous lesions. Applying these elastic distortions would likely contaminate this information, and as such, it was not used here.
 
+\subsection{Results}
+
+\input{tables/table_accuracy_224}
+
+We trained four different convolutional neural networks on patches of 224 by 224 pixels. Two of each architecture (WRN-4-2 and VGG-16). The results are detailed in table \ref{table_results_224}. The results in this table show the best epoch in regards of validation accuracy. This value is based on the average of 200 batches of 128 randomly sampled patches with a uniform class probability, and may thus be quite noisy. 
+
+From these results we can make these observations:
+
+\subsubsection{Architecture performance}
+On the two class problem of benign versus cancer patches, the wide resnet outperformed the VGG-16 architecture with an accuracy of 0.9241 as opposed to 0.9237. This difference is, however, so small that it is likely insignificant. On the three class problem however, the opposite is observed. Here the WRN-4-2 network achieved an accuracy of 0.7995, much lower than that of the VGG-16 network which achieved a 0.8245 accuracy. Figure \ref{fig_3class} shows the training and validation accuracy over time. The validation accuracy of the wide resnet is very noisy, likely the learning rate was too high.
+
+\subsubsection{Two class and three class performance}
+Accuracy on the three class problem was much lower. This is likely due to the lack of context available in the small 224 by 224 patches which is paramount in distinguishing the DCIS and IDC class. As can be seen in figure \ref{fig_2class} and \ref{fig_3class}, the difference in training and validation set accuracy was much greater for the three class networks. This indicates a larger overfit on the training set, which is to be expected when not enough features (or context) is available to learn generalizable patterns.
+
+Note that these are only intermediate results as these networks will not be used for dense prediction individually. Instead, we train a network on top of the output of these models. 
+
+\begin{figure}[!t]
+\centering{}
+\hspace{-0.3cm}\includegraphics[width=3.5in]{2class_performance}
+\vspace{-0.35cm}\caption{Performance of networks trained on the two class problem of benign versus cancerous patches. The dashed line shows the performance on the images from the train set it was shown that epoch.}
+\label{fig_2class}
+\end{figure}
+
+\begin{figure}[!t]
+\centering{}
+\hspace{-0.3cm}\includegraphics[width=3.5in]{3class_performance}
+\vspace{-0.35cm}\caption{Performance of networks trained on all three classes. The dashed line shows the performance on the images from the train set it was shown that epoch. The validation accuracy of the wide resnet is especially noisy.}
+\label{fig_3class}
+\end{figure}
+
+
+
+
+\section{Stacked architecture}
+
+In order to increase the context available for dense prediction we stack a second CNN on top of the last fully convolutional layer of the WRN-4-2 224x224 network. We compare the performance between stacking on top of a 2 class network versus a 3 class network. Also, we will look into the effect of patch size on network performance by comparing 512x512, 768x768 and 1024x1024 input-sized networks. 
+
+In figure \ref{fig_stacked}, the stacked architecture is shown. It is a hybrid between the wide resnet architecture and the VGG architecture. This architecture is a fully convolutional network, which allows for faster dense prediction due to the possibility of re-using overlapping predictions. 
+
+We use a starting learning rate of 0.005 with the same learning rate decay strategy as the network trained on patches of size 224x224. Also, the same augmentations are used. For the 512x512 and 768x768 networks a training and validation minibatch size of 18 and 40 was used, respectively. We define one epoch to be 100 of these update steps, and average over 75 of these validation minibatches.
+
+The network trained on 1024x1024 patches has a higher memory footprint that is too high for these minibatch sizes, instead one minibatch consists of 10 patches. For validation we average over 125 batches of 22 patches.
+
 \begin{figure}[!t]
 \centering{}
 \includegraphics[width=2.2in]{architecture_stacked}
-\vspace{-0.15cm}\caption{Architecture of the stacked network. The weights of the components with the dotted outlines are taken from the previously trained 224x224 patch model, and are no longer updated (these are frozen).}
+\vspace{-0.15cm}\caption{Architecture of the stacked 768x768 input-sized network. The weights of the components with the dotted outlines are taken from the previously trained 224x224 patch model, and are no longer updated (these are frozen).}
 \label{fig_stacked}
 \end{figure}
+
+\subsection{Results}
+
+\input{tables/table_accuracy_stacked}
+
+Figure \ref{fig_stack} shows the performance of the network during training. Again, we observe a very noisy validation accuracy over the course of the training. The network stacked on top of the 2 class network shows a less noisy accuracy over time as opposed to that of the 3 class network. This higher noise for this network may be due to the lack of convergence of the network it is stacked on top of. The network weights at the best epoch were selected, which was epoch 40 (see figure for this network \ref{fig_3class}). The stacked network on top of this three class network did however outperform this network by around 2\% accuracy. The complete set of results are shown in table \ref{table_results_stacked}. 
+
+The accuracy of all three networks is much greater than that of the original networks trained on patches of size 224x224 they are stacked on top of. We can also see a clear improvement in accuracy as the patch size is 
+increased, hinting towards this increase in accuracy not just being attributable to the increase in network depth. The 1024x1024 outperformed the smaller architectures (0.9135 versus 0.9050 and 0.8723 for the 768x768 and 512x512 network), despite the smaller batch size. This network is however computationally much more demanding to both train and make predictions with. For this reason we select the 768x768 network for dense prediction.
+
+
+
+%\begin{figure}[!t]
+%\centering{}
+%\hspace{-0.3cm}\includegraphics[width=3.5in]{768_performance}
+%\vspace{-0.35cm}\caption{Performance of stacked networks, either on the 2 class WRN-4-2 and the 3 class WRN-4-2 model.}
+%\label{fig_stack}
+%\end{figure}
+
+
+
+\begin{figure}[!t]
+\centering{}
+\hspace{-0.45cm}\includegraphics[width=3.65in]{768_performance_dual}
+\vspace{-0.35cm}\caption{Performance of stacked networks. The left graph shows the performance of the 768x768 networks stacked on the 2 class WRN-4-2 and the 3 class WRN-4-2 model. The right graph shows the performance of stacked networks with various input sizes, all stacked on the 3 class WRN-4-2 model. The dotted lines indicate performance on the train set.}
+\label{fig_stack}
+\end{figure}
+
+
+
+%\begin{figure}[!t]
+%\centering{}
+%\hspace{-0.3cm}\includegraphics[width=3.5in]{patch_sizes_performance}
+%\vspace{-0.35cm}\caption{Performance of networks with different input sizes, all stacked on the 3 class WRN-4-2 model.}
+%\label{fig_stack_different_input_sizes}
+%\end{figure}
+
+\subsection{Qualitative results}
+The model we select for dense prediction will not create a perfect probability map. Looking at the confusion matrix in table \ref{table_confusion_768}, we can expect most errors in misclassified patches to be between benign and the DCIS class. As for the DCIS versus IDC distinction, patches are more often misclassified as being DCIS when they are actually IDC, than the other way around. Figure \ref{fig_misclassifications} shows a selection of both correctly and incorrectly classified patches.
+
+\begin{table}[h]
+%% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.21}
+% if using array.sty, it might be a good idea to tweak the value of
+% \extrarowheight as needed to properly center the text within the cells{}
+\caption{Confusion matrix of predictions of model used for dense prediction, based on 72,000 random validation set patches }
+\label{table_confusion_768}
+\centering
+%% Some packages, such as MDW tools, offer better commands for making tables
+%% than the plain LaTeX2e tabular which is used here.
+\begin{tabular}{|l|rrr|}
+\hline
+\textsc{}&\textsc{Benign}&\textsc{DCIS}&\textsc{IDC}\\
+\hline
+\textsc{Benign}&0.878&0.088&0.034\\
+\textsc{DCIS}&0.068& 0.904&0.028\\
+\textsc{IDC}&0.015& 0.081&0.904\\
+\hline
+
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\vspace{-0.435cm}
+\centering{}
+\hspace{-0.1cm}\includegraphics[width=3.5in]{figures/misclassifications.png}
+\vspace{-0.55cm}\caption{Hand selected examples of patches that were correctly and incorrectly classified. (a) Correct benign. (b) Benign patch misclassified as DCIS. (c) Correct DCIS. (d) DCIS misclassified as benign. (e) Correct IDC. (f) IDC misclassified as DCIS. }
+\label{fig_misclassifications}
+\end{figure}
+
+
+
+
+\subsection{Dense prediction}
+To create the dense prediction, we slide the patch clasifier over the whole-slide image until the full image has been covered. We select the best performing 768x768 stacked CNN for this purpose. In our case this is the model stacked on the three class WRN-4-2 network trained on 224x224 patches.
+
+Whilst this architecture is fully convolutional, we do not exploit this by further increasing the input size. Throughout the network padding is applied, which can potentially lead to learned border effects in the prediction which may not be present in the same way for a larger input size. Whilst this may not necessarily hurt performance, we do not utilize this option to make sure this does not influence results. We move the classifier by 256 pixels (e.g. a stride of 256) until the whole image has been covered to create a probability map with a decent probability. 
+
+Figure \ref{fig_wsi_examples} shows examples of dense predictions of WSIs with these parameters. It yields a course segmentation of the different types of tissue.
+%\vspace{-1cm}
+
+
+\begin{figure}[h]
+\centering{}
+\hspace{0.09cm}\includegraphics[width=3.35in]{wsi_predictions_examples}
+\vspace{-0.15cm}\caption{Randomly selected dense prediction maps. The red, green and blue color channels indicate the probability of benign, DCIS and IDC class respectively. Black pixels are fully background patches that were not classified.}
+\label{fig_wsi_examples}
+\end{figure}
+
+
+
+
+
+
+
 
 
 % An example of a floating figure using the graphicx package.
@@ -798,69 +937,80 @@ Another commonly used data augmentation method is also zooming. This was not use
 
 
 \section{Whole-slide image labeling}
-A secondary goal is providing a label for the whole-slide image. We create a dense prediction using the stacked convolutional neural network trained previously and extract features from this probability map. We then use these features to train a classifier for classifying this label for whole-slide image.
+The second goal is to classify the whole-slide image into benign, DCIS or DCIS classes. We create a dense prediction using the stacked convolutional neural network trained previously and extract features from this probability map. These features are then used to train a classifier for classifying the whole-slide image. We treat it as a multiclass problem in which one label is assigned to a whole-slide image. Note that an image may contain both DCIS and IDC lesions. When this is the case, it should receive the IDC label.
 
-We will treat it as a multiclass problem; we will assign one label to a whole-slide image. In actuality this problem is multilabel. A slide with invasive (IDC) lesions, may also contain DCIS lesions. Also, of course, these slides will also likely contain benign lesions. If a slide contains any IDC, it should be labeled IDC. If it contains DCIS but not IDC, it should be labeled DCIS. Otherwise, the label is benign.
+The probability map is first thresholded giving every pixel a single label. The label with the highest probability is selected for every pixel. Background pixels are discarded in the calculation of all features. 
+We extract both features that describe the image as a whole, as well as those that capture the spatial arrangement of tissue components. One WSI may contain multiple tissue sections, often the next slice of tissue. An example of this can be seen the second prediction in figure \ref{fig_wsi_examples}. Those features that are not full image descriptors are determined independently for each of these tissue sections.
 
-We tweak and evaluate the models by applying 10-fold cross validation on the combined set of train and validation whole slide images. As a final evaluation, we classify images from the held-out test subset of the data. This data has not been used to train any of the models in the whole pipeline, and will thus be a good measure of the generalisability of the method. Refer to table \ref{table_dataset} for the amount of whole-slide images per class.
 
 The features we extract are the following:
 
-\section{Results}
+\subsubsection{Full image descriptors}
+The first set of features we extract are those that describe the image as a whole. We determine the fraction of pixels that are benign, DCIS, IDC and cancerous (DCIS and IDC combined).Then, we also determine the fraction of DCIS and IDC w.r.t. all cancerous pixels.
 
-\begin{figure}[!t]
-\centering{}
-\hspace{-0.3cm}\includegraphics[width=3.5in]{2class_performance}
-\vspace{-0.35cm}\caption{Performance of networks trained on the two class problem of benign versus cancerous patches. The dashed line shows the performance on the images from the train set it was shown that epoch.}
-\label{fig_2class}
-\end{figure}
+\subsubsection{Voronoi diagram features}
+A voronoi diagram is a partitioning of an area of pixels based on the distance to certain points. Conceptually these regions are the result of region growing from certain seed points. To create the seed points we first create a binary image of both the DCIS and IDC class, we then determine the connected components. The center of these components is used as seed for growing (a voronoi diagram is created for both classes indepently and its features are both saved). For each of the voronoi regions we extract the following metrics: The area of the region, the eccentricity, the area of this region divided by the total tissue area and the fraction of this area filled with this label's prediction. Per WSI we determine the mean, median and standard deviation of these voronoi area metrics. Also, we determine the largest single region and add this to the feature set.
 
-\begin{figure}[!t]
-\centering{}
-\hspace{-0.3cm}\includegraphics[width=3.5in]{3class_performance}
-\vspace{-0.35cm}\caption{Performance of networks trained on all three classes. The dashed line shows the performance on the images from the train set it was shown that epoch. The validation accuracy of the wide resnet is especially noisy.}
-\label{fig_3class}
-\end{figure}
+Additionaly, we determine the average amount of DCIS and IDC connected components per tissue section.
 
+\subsubsection{Delaunay triangulation features}
+For each of the connected components in both the DCIS and IDC masked image we also construct a delaunay triangulation graph using the connected components' center point as nodes. Figure \ref{fig_delaunay} shows an example of such a delaunay triangulation graph overlayed over the dense prediction. For each of the nodes we count the amount of neighbors that are closer than a certain threshold (we used 24 pixels). Also, the average distance of these neighbors is determined for each node. Here we determine the mean, median and standard deviation of these values and use these as features. We also determine the highest average node distance in the whole image.
 
-\begin{figure}[!t]
-\centering{}
-\hspace{-0.3cm}\includegraphics[width=3.5in]{768_performance}
-\vspace{-0.35cm}\caption{Performance of stacked networks, either on the 2 class WRN-4-2 and the 3 class WRN-4-2 model.}
-\label{fig_stack}
-\end{figure}
+\subsubsection{Convex hull area features}
+IDC lesions often form a single large connected mass, an example of which can be seen in the third and fifth image in figure \ref{fig_wsi_examples}. Manual inspection of the probability maps showed that when these areas are more sparse, they are often false positives. To capture this in a feature we filter the small connected components (less than 12 pixels in size), and then construct a convex hull of the remaining connected components. We then determine the fraction of IDC labeled pixels in the area contained in the convex hull. If multiple tissue sections are present, we average over the different tissue sections which contain IDC.
+
 
 
 
 
 \begin{figure}[!t]
 \centering{}
-\hspace{-0.3cm}\includegraphics[width=3.5in]{patch_sizes_performance}
-\vspace{-0.35cm}\caption{Performance of networks with different input sizes, all stacked on the 3 class WRN-4-2 model.}
-\label{fig_stack_different_input_sizes}
+\includegraphics[width=3.35in]{feature_delaunay}
+\vspace{-0.15cm}\caption{Delaunay triangulation of DCIS lesions. Benign tissue is shown in light blue, DCIS annotations are shown in yellow. The small dark spots are pixels labeled with the IDC class. For each of the red nodes the amount of neighbors and the average distance to these is determined.}
+\label{fig_delaunay}
 \end{figure}
 
+The resulting feature vector contains 54 features. We use these features as input for a random forest classification model as proposed by Breiman \cite{breiman2001random}. We train a forest of 128 random decision trees, each of which receives the full feature set as input. A Scikit-learn implementation of this method was used\cite{scikit-learn}.
 
-\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-\renewcommand{\arraystretch}{1.1}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-\caption{Regions of interest (ROI) per class}
-\label{table_roi_count}
+\subsection{Evaluation}
+
+We tweak and evaluate the models by applying cross validation on the combined set of train and validation whole slide images. Because of the small amount of images, we adopt a leave-one out cross validation strategy. In such a scheme,  one image is removed from the dataset, a model is trained on all other images, which is then used to predict this single image. This is repeated until a prediction is made for every image.  This is equivalent to K-fold cross validation in which K is equal to the amount of samples.
+
+As a final evaluation, we classify images from the held-out test subset of the data. This data has not been used to train any of the models in the whole pipeline, and will thus be a good measure of the generalisability of the method. Again, see table \ref{table_dataset} for the amount of whole-slide images per class. It is noteworthy that the performance on this combined set of train and validation set images may be inflated as the CNNs were trained on patches from this train set and are thus likely to have better dense predictions of these slides. This effect is magnified by the train set being around 3 times larger in count than the validation set.
+
+We evaluate our models on three metrics:
+\subsubsection{Accuracy}
+The accuracy is simply the fraction of correct predictions. Because of the class imbalance present in our dataset (see table \ref{table_dataset}) this measure can give a distorted view of the predictive value of the model.
+
+\subsubsection{Cohen's kappa coefficient}
+Cohen's kappa is a statistic that is generally used to measure inter-annotator agreement. It is not sensitive to class imbalance. It is defined as
+
+$$\kappa = \frac{p_o-p_e}{1-p_e},$$
+
+where $p_o$ is the observed agreement ratio, and $p_e$ is the expected agreement under random assignment of labels \cite{artstein2008inter}. This measure can range between -1 and 1, where 0 corresponds to chance agreement and higher is better.
+
+\subsubsection{Area under curve (AUC)}
+As the discrimination threshold is varied, the true and false positive rate of a model will vary. An operating point can be selected at which a point is assigned to a class or not. We create a receiver operating characteristic (ROC) curve that shows the performance as this threshold is changed. The area under this curve is \textit{``equal to the probability that a classifier will rank a randomly chosen positive instance higher than a randomly chosen negative one'' \cite{Fawcett:2006:IRA:1159473.1159475}.} This provides a good measure of the overall performance of the model and its ability to capture uncertainty in its labeling.
+
+Whilst this can be calculated for the multiclass problem by composing the problem in a one-versus-rest scheme, we choose only to determine this for the binary problem of benign versus cancer WSIs. This decision is made because of the very low amount of samples with DCIS and IDC labels, which would result in a very blocky and inaccurate curve.
+
+\subsection{Results}
+\input{tables/table_rf}
+
+Accuracy and the kappa coefficient on the held out test set was much lower than that of the cross validated results for the three class problem. Taking the class imbalance into account, the confusion matrix of the test set predictions in table \ref{table_confusion_test} shows that especially errors between the DCIS and IDC class are common. This explains the large difference between the two and three class model performance metrics.
+
+\begin{table}[h]
+\renewcommand{\arraystretch}{1.21}
+\caption{Confusion matrix of test set predictions}
+\label{table_confusion_test}
 \centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-\begin{tabular}{|lcc|}
+\begin{tabular}{|l|rrr|}
 \hline
-\textsc{Label}&\textsc{ROI Count}&\\
+\textsc{}&\textsc{Benign}&\textsc{DCIS}&\textsc{IDC}\\
 \hline
-&\textit{Train}&\textit{Validation}\\
-Benign&5097& 795\\
-%\hline
-DCIS&1092&  151\\
-%\hline
-IDC&2307& 432\\
+\textsc{Benign}&27&4&0\\
+\textsc{DCIS}&4& 11&5\\
+\textsc{IDC}&0& 4&9\\
 \hline
 
 \end{tabular}
@@ -869,14 +1019,20 @@ IDC&2307& 432\\
 
 
 
-
-\input{tables/table_accuracy_224}
-\input{tables/table_accuracy_stacked}
-
-
+\begin{figure}[!t]
+\centering{}
+\hspace{-0.3cm}\includegraphics[width=3.5in]{roc}
+\vspace{-0.35cm}\caption{Receiver operator characteristic (ROC) curve. The solid and dashed line are for the independent test set and cross validated train set respectively.}
+\label{fig_roc}
+\end{figure}
 
 \section{Conclusion}
+
+
+
+As the dense prediction improves, we can expect the whole-slide image prediction to improve with it. With a (near) perfect dense prediction, predicting the label of the whole-slide image becomes trivial.
 The conclusion goes here.
+
 
 
 
@@ -908,10 +1064,10 @@ The conclusion goes here.
 
 
 % use section* for acknowledgment
-\section*{Acknowledgment}
+%\section*{Acknowledgment}
 
 
-The authors would like to thank...
+%The authors would like to thank...
 
 
 % Can use something like this to put references on a page
@@ -993,8 +1149,6 @@ The authors would like to thank...
 %\enlargethispage{-5in}
 
 
-
-% that's all folks
 \end{document}
 
 
