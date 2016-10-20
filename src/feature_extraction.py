@@ -17,9 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import measure
 from scipy.spatial import Delaunay
-from skimage.morphology import binary_closing
-from skimage.morphology import disk
-from skimage.morphology import watershed
+from skimage.morphology import binary_closing, disk, watershed, remove_small_objects, convex_hull_image
 from scipy.ndimage.morphology import binary_fill_holes
 import csv
 from glob import glob
@@ -60,7 +58,8 @@ def tissueMorphology(low_res_image, labeled_tissue_mask, class_pixel_value): #pi
     class_Labeled = measure.label(class_mask, connectivity = 2) 
     area_voronoi = watershed(labeled_tissue_mask, class_Labeled)
     class_labeled_holes_filled = measure.label(class_mask_holes_filled, connectivity = 2) 
-    im = np.hstack((area_voronoi/np.max(area_voronoi), low_res_image))
+
+    #im = np.hstack((area_voronoi/np.max(area_voronoi), low_res_image))
     #plt.imshow(im); plt.show()
     #plt.imsave('C:\Users\Babak\Documents\sth.tif', area_voronoi*(1-class_mask[:,:,0]/3),  cmap='Greys')    
     #plt.imsave('C:\Users\Babak\Documents\sth2.tif', class_mask_holes_filled,  cmap='Greys')    
@@ -157,6 +156,33 @@ def extractDelaunayFeatures(points_dict, image):
         number_of_biopsy_clusters = 1
     return number_of_biopsy_clusters, num_neighbors_all, Average_node_dist
 
+def idc_convex_hull_features(labeled_tissue_mask, image):
+    idc = np.where(image==3,1,0)
+    idc_fractions = []
+
+    for tissue_section_index in np.unique(labeled_tissue_mask):
+        mask = np.where(labeled_tissue_mask==tissue_section_index,1,0)
+
+        idc_in_this_section = mask*idc
+
+        
+
+        conn_components = measure.label(idc_in_this_section, background=0)>0
+        conn_components = remove_small_objects(conn_components, min_size=12)
+
+        if np.sum(conn_components) < 32:
+            continue #Only some noise conn components, skip
+
+        convex_area = convex_hull_image(conn_components)
+        idc_fractions.append(np.sum(conn_components)/np.sum(convex_area))
+
+        #plot_im = np.hstack((labeled_tissue_mask, idc, idc_in_this_section, conn_components))
+        #plt.imshow(plot_im); plt.show()
+
+
+    return np.mean(idc_fractions)
+
+
 def load_label_file(path):
     with open(path) as f:
         lines = f.readlines()
@@ -234,12 +260,12 @@ if __name__ == "__main__":
         amount_benign, amount_dcis, amount_idc, amount_cancer, Total_Tissue = tissueComponentAmount(image)
         
         labeled_tissue_mask = separateBiopsies(image)
-        
+        f_idc_covered_convex_fraction = idc_convex_hull_features(labeled_tissue_mask, image)
 
 
 
         def get_descriptors(value):
-            return [np.mean(value), np.median(value), np.std(value), np.percentile(value, 75) - np.percentile(value, 25)]
+            return [np.mean(value), np.median(value), np.std(value)]#, np.percentile(value, 75) - np.percentile(value, 25)]
 
 
         def features_for_class(_CLASS):
@@ -258,8 +284,7 @@ if __name__ == "__main__":
             area_all, eccentricity_all, Voronoi_area, Voronoi_area_ZOI, filled_ratio_area, num_neighbors_all, Average_node_dist = \
                 handleXZerosInSTD(area_all, eccentricity_all, Voronoi_area, Voronoi_area_ZOI, filled_ratio_area, num_neighbors_all, Average_node_dist)        
         
-
-            f_area = get_descriptors(area_all)
+            f_area_all = get_descriptors(area_all)
             f_eccentricity = get_descriptors(eccentricity_all)
             f_voronoi_area = get_descriptors(Voronoi_area)
             f_voronoi_area_ZOI = get_descriptors(Voronoi_area_ZOI)
@@ -271,9 +296,8 @@ if __name__ == "__main__":
             f_max_avg_node_dist = np.max(Average_node_dist)
             f_num_clusters = num_glands/float(number_of_biopsy_clusters)
 
-
-
-            feature_set = f_area + f_eccentricity + f_voronoi_area + f_voronoi_area_ZOI + f_filled_ratio_area + f_num_neighbors + f_average_node_dist + [f_max_area + f_max_avg_node_dist + f_num_clusters]
+            feature_set = f_area_all + f_eccentricity + f_voronoi_area + f_voronoi_area_ZOI + f_filled_ratio_area + f_num_neighbors + f_average_node_dist + [f_max_area + f_max_avg_node_dist + f_num_clusters + f_idc_covered_convex_fraction]
+            #feature_set = f_num_neighbors + f_average_node_dist + [f_max_avg_node_dist + f_num_clusters + f_idc_covered_convex_fraction]
 
             return feature_set
 
