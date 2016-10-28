@@ -15,7 +15,7 @@ plt.style.use('ggplot')
 
 np.random.seed(0)
 
-N_ESTIMATORS_RANDOM_FOREST = 512
+N_ESTIMATORS_RANDOM_FOREST = 1024
 RUN_ON_TEST_SET = True
 
 
@@ -166,8 +166,8 @@ if RUN_ON_TEST_SET:
     table = r"""
     \begin{table}[h]
     \renewcommand{\arraystretch}{1.1}
-    \caption{Results of whole-slide image labeling}
-    \label{table_results_stacked}
+    \caption{Results of whole-slide image label prediction}
+    \label{table_results_single_label}
     \centering
     \begin{tabular}{|lrrrr|}
     \hline
